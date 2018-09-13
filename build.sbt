@@ -13,4 +13,4 @@ mainClass in (Compile, run) := Some("Starter")
 
 assemblyJarName in assembly := "ta2020.jar"
 
-mainClass in assembly := Some("Hallo")
+mainClass in assembly := Some("Starter")
