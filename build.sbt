@@ -7,7 +7,7 @@ scalaVersion := "2.12.6"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 
-mainClass in (Compile, run) := Some("Hallo")
+mainClass in (Compile, run) := Some("Starter")
 
 assemblyJarName in assembly := "ta2020.jar"
 
