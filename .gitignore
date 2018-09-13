@@ -33,3 +33,5 @@ project/target/
 target/
 .scala_dependencies
 .worksheet
+ta2020.conf
+application.conf
