@@ -3,3 +3,12 @@ name := "ta2020scala"
 version := "0.1"
 
 scalaVersion := "2.12.6"
+
+
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
+
+mainClass in (Compile, run) := Some("Hallo")
+
+assemblyJarName in assembly := "ta2020.jar"
+
+mainClass in assembly := Some("Hallo")
