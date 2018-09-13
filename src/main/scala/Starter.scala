@@ -8,20 +8,34 @@ import scala.annotation.tailrec
 object Starter {
   def main(args: Array[String]): Unit = {
     val fs = getListOfAllowedFiles(Configuration.directory,allowed).map(_.getAbsolutePath)
-    fs.foreach(println)
+    fs.foreach{ f=>
+      val len = f.length
+      val lenstr = f"$len%4s"
+      println(s"$lenstr;$f")
+    }
+    //ta2020.TADatabase.create
+
   }
 
-  def allowed(fname: String): Boolean = List(".xls", ".xlsx").exists(fname.endsWith)
+  def allowed(f:File): Boolean = {
+    if (null==f) false else {
+      val fname = f.getName
+      List(".xls", ".xlsx", ".pdf").exists(fname.endsWith)
+    }
+  }
 
-  def getListOfAllowedFiles(dir: List[String], pred: String => Boolean): List[File] = {
+  def getListOfAllowedFiles(dir: List[String], pred: File => Boolean): List[File] = {
 
     @tailrec def scanDirs(dirs: List[File], files: List[File]): List[File] = dirs match {
       case Nil => files
       case head :: rest =>
+        val liste = head.listFiles
         val newfiles: List[File] = {
-          head.listFiles.filter(f => pred(f.getName)).toList
+          if(null==liste) Nil else head.listFiles.filter(f => pred(f)).toList
         }
-        val newdirs: List[File] = head.listFiles.filter(_.isDirectory).toList
+        val newdirs: List[File] = {
+          if(null==liste) Nil else head.listFiles.filter(_.isDirectory).toList
+        }
         scanDirs(newdirs ::: rest, newfiles ::: files)
     }
 
