@@ -1,40 +1,37 @@
+
 package ta2020
 
-import slick.jdbc.SQLiteProfile.api._
+import slick.jdbc.PostgresProfile.api._
+import slick.lifted.ProvenShape
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
+object TADatabase {
 
-object TADatabase  {
-
-  val documents  = TableQuery[Documents]
-
-  val database = Database.forConfig("ta2020.db")
-
-  def create() = {
-
-    try {
+  case class User(id:Long, username:String)
 
 
-      val setup = DBIO.seq(
-        // Create the tables, including primary and foreign keys
-        documents.schema.create,
-        documents += (101, "Acme, Inc.", "99 Market Street")
-      )
+  // Schema for the "message" table:
+  final class MessageTable(tag: Tag) extends Table[User](tag, "user") {
 
-      val setupFuture = database.run(setup)
-
-      Await.ready(setupFuture,Duration.Inf)
-    } finally database.close
+    def id: Rep[Long] = column[Long]("id", O.PrimaryKey, O.AutoInc)
+    def username: Rep[String] = column[String]("content")
+    def * : ProvenShape[User] = (id,username).mapTo[User]
   }
 
-}
+  // Base query for querying the messages table:
+  lazy val messages = TableQuery[MessageTable]
 
-class Documents(tag: Tag) extends Table[(Int, String, String)](tag, "DOCUMENTS") {
-  def id = column[Int]("ID", O.PrimaryKey)
-  def name = column[String]("NAME")
-  def path = column[String]("PATH")
-  def * = (id,name,path)
+  // Create an in-memory H2 database;
+  val db = Database.forConfig("chapter01")
+
+  // Helper method for running a query in this example file:
+  def exec[T](program: DBIO[T]): T = Await.result(db.run(program), Duration.Inf)
+
+  // Run the test query and print the results:
+  println("\nSelecting all messages:")
+  exec( messages.result ) foreach { println }
 
 }
