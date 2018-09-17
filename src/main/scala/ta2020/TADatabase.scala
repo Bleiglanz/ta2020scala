@@ -3,6 +3,7 @@ package ta2020
 
 import slick.jdbc.PostgresProfile.api._
 import slick.lifted.ProvenShape
+import ta2020.TADatabase.User
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Await
@@ -14,24 +15,43 @@ object TADatabase {
 
 
   // Schema for the "message" table:
-  final class MessageTable(tag: Tag) extends Table[User](tag, "user") {
+  final class UsersTable(tag: Tag) extends Table[User](tag, "users") {
 
     def id: Rep[Long] = column[Long]("id", O.PrimaryKey, O.AutoInc)
-    def username: Rep[String] = column[String]("content")
+    def username: Rep[String] = column[String]("username")
     def * : ProvenShape[User] = (id,username).mapTo[User]
   }
 
   // Base query for querying the messages table:
-  lazy val messages = TableQuery[MessageTable]
+  lazy val users = TableQuery[UsersTable]
+}
 
-  // Create an in-memory H2 database;
-  val db = Database.forConfig("chapter01")
+object DB {
 
-  // Helper method for running a query in this example file:
-  def exec[T](program: DBIO[T]): T = Await.result(db.run(program), Duration.Inf)
+  private val db = Database.forConfig("ta2020.db")
 
-  // Run the test query and print the results:
-  println("\nSelecting all messages:")
-  exec( messages.result ) foreach { println }
+  private def exec[T](program: DBIO[T]): T = Await.result(db.run(program), Duration.Inf)
+
+  def read():Unit = {
+    println("\nSelecting all messages:")
+    exec(TADatabase.users.result) foreach {
+      println
+    }
+    ()
+  }
+
+
+  def batchinsert(data:Seq[User]):Unit = {
+    val conn = db.source.createConnection()
+
+    data.foreach { user=>
+      val st = db.source.createConnection().prepareStatement("INSERT INTO users (username) VALUES (?)")
+      st.setString(1,user.username)
+      st.executeUpdate()
+      ()
+    }
+    conn.close()
+  }
+
 
 }
