@@ -7,7 +7,6 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileInputStream;
 import java.nio.file.Path;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.text.DateFormat;
@@ -18,6 +17,59 @@ import java.util.Locale;
 
 
 public class TableFromExcel {
+
+    private static String cleanString(String s) {
+        if (null == s) return "";
+        s=s.toUpperCase();
+        s=s.replace(" ", "_").replace("/", "_").replace(":", "_").replace("\\", "_").replace("'","_").replace("\\n","").replace("\\r","").replace("&","u");
+        s=s.replace("(", "_").replace(")", "_").replace("[","_").replace("]","_").replace(".","_");
+        s=s.replace("Ü","UE").replace("Ä","AE").replace("Ö","ÖE");
+        return s;
+    }
+
+    private static boolean emptyString(String s) {
+        return null == s || 0 == s.trim().length();
+    }
+
+    public static List<TableFromExcel> procSingleExcelGeneral(String prefix, String filename){
+        //List<Path> pathsToExcelFiles
+        Path p = java.nio.file.Paths.get(filename);
+        ArrayList<TableFromExcel> result = new ArrayList<>();
+
+            // 4.1: generate a workbook if possible
+            Workbook wb = null;
+            try {
+                wb = new HSSFWorkbook(new FileInputStream(p.toFile()));
+            } catch (Exception e1) {
+                try {
+                    wb = new XSSFWorkbook(new FileInputStream(p.toFile()));
+                } catch (Exception e2) {
+                    System.out.println("Kann Workbook nicht erstellen xls / oder xslt \n" + p.toString() + e2);
+                }
+            }
+            // 4.2: if there is a workbook, generate a Table for each sheet
+            if (null != wb) {
+                // only one evaluator for each workbook
+                FormulaEvaluator eval = wb.getCreationHelper().createFormulaEvaluator();
+                int sheets = wb.getNumberOfSheets();
+                for (int i = 0; i < sheets; i++) {
+                    Sheet s = wb.getSheetAt(i);
+                    if(processsheet(p,s.getSheetName())) {
+                        TableFromExcel tabelle = new TableFromExcel(p.toAbsolutePath().toString(), s, eval, prefix, null);
+                        if(null!=tabelle.getData() && tabelle.getData().length>0) result.add(tabelle);
+                    }
+                }
+            }  // end workbook is not null
+
+        return result;
+    }
+
+    static private boolean processsheet(final Path p, final String sheetname){
+        boolean result = false;
+        final String fileName = p.getFileName().toString();
+        if(fileName.startsWith("TA") && sheetname.startsWith("Meldungen")) result = true;
+        return result;
+    }
 
     public String getName() {
         return name;
@@ -39,9 +91,9 @@ public class TableFromExcel {
 
     public String[][] getData(){return data;}
 
-    TableFromExcel(final String pfad, final Sheet sheet, final FormulaEvaluator a_evaluator, String prefix, String fname) {
+    private TableFromExcel(final String pfad, final Sheet sheet, final FormulaEvaluator a_evaluator, String prefix, String fname) {
         if (null == prefix) prefix = "";
-        String tempname = null == fname ? prefix.concat(ArbeitenImporter.cleanString(pfad.concat("_").concat(sheet.getSheetName()))) : fname;
+        String tempname = null == fname ? prefix.concat(cleanString(pfad.concat("_").concat(sheet.getSheetName()))) : fname;
         this.name = (tempname.length() > 124 ? tempname.substring(0, 124) : tempname).toLowerCase();
         this.evaluator = a_evaluator;
         this.zeilen = sheet.getPhysicalNumberOfRows();
@@ -67,8 +119,10 @@ public class TableFromExcel {
             //if (sheet.getRow(z)!=null) System.out.println("Spalten:"+sheet.getRow(z).getPhysicalNumberOfCells());
             if (sheet.getRow(z) != null && 0 < sheet.getRow(z).getPhysicalNumberOfCells()) {
                 for (int s = 0; s < this.spalten - 2; s++) {
-                    if (null != sheet.getRow(z))
-                        this.data[physical_count][s] = extractString(sheet.getRow(z).getCell(s));
+                    if (null != sheet.getRow(z)) {
+                        String cellContent = extractString(sheet.getRow(z).getCell(s));
+                        this.data[physical_count][s] = cellContent;
+                    }
                 }
                 this.data[physical_count][this.spalten - 2] = Integer.toString(z + 1);
                 this.data[physical_count][this.spalten - 1] = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.FULL).format(System.currentTimeMillis());
@@ -89,11 +143,11 @@ public class TableFromExcel {
         for (int i = 0; i < this.zeilen; i++)
             for (int j = 0; j < this.spalten; j++) {
                 // the first filled cell is the column title
-                if (ArbeitenImporter.emptyString(this.columnNames[j]))
-                    if (!ArbeitenImporter.emptyString(this.data[i][j]))
+                if (emptyString(this.columnNames[j]))
+                    if (!emptyString(this.data[i][j]))
                         this.columnNames[j] = "S" + j;  //+"_" + ArbeitenImporter.cleanString(this.data[i][j]);
                 // replace null by empty string and count non empty stuff
-                if (ArbeitenImporter.emptyString(this.data[i][j])) {
+                if (emptyString(this.data[i][j])) {
                     this.data[i][j] = "";
                 } else {
                     columnNonEmptyCount[j]++;
@@ -105,7 +159,7 @@ public class TableFromExcel {
             }
         //append count to columnName
         for (int j = 0; j < this.spalten; j++) {
-            if (ArbeitenImporter.emptyString(this.columnNames[j])) this.columnNames[j] = "S" + j;
+            if (emptyString(this.columnNames[j])) this.columnNames[j] = "S" + j;
             //this.columnNames[j] = this.columnNames[j].concat("_").concat(Integer.toString(this.columnNonEmptyCount[j]));
         }
 
@@ -222,7 +276,7 @@ public class TableFromExcel {
         sql.append("] (");
         sql.append("[IMPORTPK] [int] IDENTITY(1,1) NOT NULL ");
         for (int i = 0; i < this.spalten; i++) {
-            sql.append(", [").append(ArbeitenImporter.cleanString(this.columnNames[i])).append("] [nvarchar](").append(this.columnWidth[i]).append(")");
+            sql.append(", [").append(cleanString(this.columnNames[i])).append("] [nvarchar](").append(this.columnWidth[i]).append(")");
         }
         sql.append(", [check_systeme_fid]      INT NULL  CONSTRAINT [fk_systeme").append(name).append("] FOREIGN KEY REFERENCES dbo.systeme(systeme_id)");
         sql.append(", [check_grliste_fid]      INT NULL  CONSTRAINT [fk_grliste").append(name).append("] FOREIGN KEY REFERENCES dbo.grliste(grliste_id)");
@@ -239,62 +293,5 @@ public class TableFromExcel {
     }
 }
 
-class ArbeitenImporter {
 
-    static String cleanString(String s) {
-        if (null == s) return "";
-        s=s.toUpperCase();
-        s=s.replace(" ", "_").replace("/", "_").replace(":", "_").replace("\\", "_").replace("'","_").replace("\\n","").replace("\\r","").replace("&","u");
-        s=s.replace("(", "_").replace(")", "_").replace("[","_").replace("]","_").replace(".","_");
-        s=s.replace("Ü","UE").replace("Ä","AE").replace("Ö","ÖE");
-        return s;
-    }
-
-    static boolean emptyString(String s) {
-        return null == s || 0 == s.trim().length();
-    }
-
-    public static List<TableFromExcel> procSingleExcelGeneral(String prefix, List<Path> pathsToExcelFiles){
-        ArrayList<TableFromExcel> result = new ArrayList<>();
-        for (Path p : pathsToExcelFiles) {
-            // 4.1: generate a workbook if possible
-            Workbook wb = null;
-            try {
-                wb = new HSSFWorkbook(new FileInputStream(p.toFile()));
-            } catch (Exception e1) {
-                try {
-                    wb = new XSSFWorkbook(new FileInputStream(p.toFile()));
-                } catch (Exception e2) {
-                    System.out.println("Kann Workbook nicht erstellen xls / oder xslt \n" + p.toString() + e2);
-                }
-            }
-            // 4.2: if there is a workbook, generate a Table for each sheet
-            if (null != wb) {
-                // only one evaluator for each workbook
-                FormulaEvaluator eval = wb.getCreationHelper().createFormulaEvaluator();
-                int sheets = wb.getNumberOfSheets();
-                for (int i = 0; i < sheets; i++) {
-                    Sheet s = wb.getSheetAt(i);
-                    if(processsheet(p,s.getSheetName())) {
-                        TableFromExcel tabelle = new TableFromExcel(p.toAbsolutePath().toString(), s, eval, prefix, null);
-                        result.add(tabelle);
-                    }
-                }
-            }  // end workbook is not null
-        } // end 4: for each excel file
-        return result;
-    }
-
-    static private boolean processsheet(final Path p, final String sheetname){
-        boolean result = true;
-        final String fileName = p.getFileName().toString();
-        if(fileName.startsWith("e01-gruner")    && !sheetname.startsWith("Terminplan")) result = false;
-        if(fileName.startsWith("e02-schulters") && !sheetname.startsWith("Termin")) result = false;
-        if(fileName.startsWith("b01-braun")     && sheetname.startsWith("Tabelle5")) result = false;
-        if(fileName.startsWith("s03-schmid")    && !sheetname.startsWith("GR_Uebergabe_aktuell")) result = false;
-        if(fileName.startsWith("~$")) result=false;
-        if(sheetname.toLowerCase().contains("bersicht_grpunkte_zu_projekten")) result = false;
-        return result;
-    }
-}
 

@@ -3,21 +3,35 @@ import java.io.File
 
 import ta2020.Configuration
 import ta2020.TADatabase.User
+import collection.JavaConverters._
+
 
 import scala.annotation.tailrec
 
 object Starter {
+
   def main(args: Array[String]): Unit = {
 
     if (args.contains("help")) print("Scan files relevat for TA2020 MUO")
 
     val fs = getListOfAllowedFiles(Configuration.directory, allowed).map(_.getAbsolutePath)
-    fs.foreach { f =>
-      print(f)
+
+    fs.filter(_.endsWith("xlsx")).foreach { f =>
+        val res = ta2020.TableFromExcel.procSingleExcelGeneral("ta2020_", f).asScala
+        for(t <- res;
+            o = Option(t);
+            f <- o) {
+            print(f.getName)
+            print(s"\n=============\n")
+            for(l <- f.getData) print(l.mkString("--->",",","\n"))
+
+        }
+
+
+        //for(l <- res2) {print(res.mkString("",",","\n"))}
+      }
     }
-    ta2020.DB.batchinsert(List(User(0,"Anton")))
-    ta2020.DB.read()
-  }
+
 
   def allowed(file: File): Boolean = Option(file) match {
     case None => false

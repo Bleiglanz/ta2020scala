@@ -24,7 +24,8 @@ libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.23.1",
   "org.postgresql" % "postgresql" % "42.2.5",
   "org.apache.poi" % "poi" % "4.0.0",
-  "org.apache.poi" % "poi-ooxml" % "4.0.0"
+  "org.apache.poi" % "poi-ooxml" % "4.0.0",
+  "org.apache.commons" % "commons-math3" % "3.6.1"
 )
 
 mainClass in (Compile, run) := Some("Starter")
