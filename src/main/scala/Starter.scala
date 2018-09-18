@@ -29,25 +29,12 @@ object Starter {
 
     val fs = getListOfAllowedFiles(Configuration.inputdirs, allowed).map(_.getAbsolutePath)
 
-    fs.filter(_.endsWith("3xlsx")).foreach { f =>
-        val res = ta2020.TableFromExcel.procSingleExcelGeneral("ta2020_", f).asScala
-        for(t <- res;
-            o = Option(t);
-            f <- o) {
-            print(f.getName)
-            print(s"\n=============\n")
-            for(l <- f.getData) print(l.mkString("--->",",","\n"))
+    val data:Array[Array[String]] = fs.filter(_.endsWith("xlsx")).flatMap(ta2020.TableFromExcel.procSingleExcelGeneral("ta2020_", _).asScala).head.getData
 
-        }
-
-
-        //for(l <- res2) {print(res.mkString("",",","\n"))}
-      }
-
-       val pw = new PrintWriter(new File( Configuration.outputdir + "/index.html"), "UTF-8")
-       pw.print(html.index(Configuration.htmltitle,Sidebar.entries))
-       pw.close()
-    }
+    val pw = new PrintWriter(new File( Configuration.outputdir + "/index.html"), "UTF-8")
+    pw.print(html.index(Configuration.htmltitle, Sidebar.entries,data))
+    pw.close()
+  }
 
 
   def allowed(file: File): Boolean = Option(file) match {

@@ -15,11 +15,19 @@
 // limitations under the License.
 package ta2020
 
+import java.text.{DateFormat, SimpleDateFormat}
+import java.util.{Calendar, Locale}
+
 import com.typesafe.config.{Config, ConfigFactory}
+
 import collection.JavaConverters._
 
 
 object Configuration {
+
+  private val format:DateFormat = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.FULL, Locale.GERMANY);
+
+  private val currentdate:String =format.format(Calendar.getInstance().getTime)
 
   val config: Config = ConfigFactory.load()
 
@@ -27,6 +35,6 @@ object Configuration {
 
   val outputdir:String = config.getString("ta2020.outputdir")
 
-  val htmltitle:String = config.getString("ta2020.htmltitle")
+  val htmltitle:String = config.getString("ta2020.htmltitle") + currentdate
 
 }
