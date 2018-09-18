@@ -1,6 +1,5 @@
 DROP TABLE users
 
-
 CREATE TABLE users
 (
   id bigserial NOT NULL,
