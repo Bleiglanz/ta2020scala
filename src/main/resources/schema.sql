@@ -1,10 +1,9 @@
-DROP TABLE users
-
-CREATE TABLE users
-(
+CREATE TABLE dokumente (
   id bigserial NOT NULL,
-  username VARCHAR NOT NULL,
-  CONSTRAINT pk_users PRIMARY KEY (id)
-);
+  name varchar(2000) NOT NULL,
+  fullpath varchar(255) NOT NULL,
+  extension varchar(255) NOT NULL,
+  size bigint NOT NULL,
 
-INSERT INTO users(username) values ('anton');
+  CONSTRAINT pk_dokumente PRIMARY KEY (id)
+)

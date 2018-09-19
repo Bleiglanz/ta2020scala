@@ -16,7 +16,6 @@
 import java.io.{File, PrintWriter}
 
 import ta2020.{Configuration, Sidebar}
-import ta2020.TADatabase.User
 
 import collection.JavaConverters._
 import scala.annotation.tailrec
@@ -25,15 +24,22 @@ object Starter {
 
   def main(args: Array[String]): Unit = {
 
-    if (args.contains("help")) print("Scan files relevat for TA2020 MUO")
+    if (args.contains("gen")){
+      print("Hi\n")
+      val schema:String = txt.schema_sql(model.Schema.tables).toString()
+      print(schema)
+      helper.writeUTF8File("src/main/resources/schema.sql",schema)
+      val table = model.Schema.tables.head
+      val code = txt.schema_slick(table).toString()
+      print(code)
+      //helper.writeUTF8File("src/main/scala/model/entities/" + table.caseclassname + ".scala", code)
 
-    val fs = getListOfAllowedFiles(Configuration.inputdirs, allowed).map(_.getAbsolutePath)
+    }else {
 
-    val data:Array[Array[String]] = fs.filter(_.endsWith("xlsx")).flatMap(ta2020.TableFromExcel.procSingleExcelGeneral("ta2020_", _).asScala).head.getData
-
-    val pw = new PrintWriter(new File( Configuration.outputdir + "/index.html"), "UTF-8")
-    pw.print(html.index(Configuration.htmltitle, Sidebar.entries,data))
-    pw.close()
+      val fs = getListOfAllowedFiles(Configuration.inputdirs, allowed).map(_.getAbsolutePath)
+      val data: Array[Array[String]] = fs.filter(_.endsWith("xlsx")).flatMap(ta2020.TableFromExcel.procSingleExcelGeneral("ta2020_", _).asScala).head.getData
+      helper.writeUTF8File(Configuration.outputdir + "index.html",html.index(Configuration.htmltitle, Sidebar.entries, data).toString())
+    }
   }
 
 
