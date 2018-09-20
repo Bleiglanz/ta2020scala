@@ -13,9 +13,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import java.io.{File, PrintWriter}
+import java.io.File
 
-import ta2020.{Configuration, Sidebar}
+import ta2020.Config
 
 import collection.JavaConverters._
 import scala.annotation.tailrec
@@ -23,6 +23,8 @@ import scala.annotation.tailrec
 object Starter {
 
   def main(args: Array[String]): Unit = {
+
+    val config = Config
 
     if (args.contains("gen")){
       print("Hi\n")
@@ -33,12 +35,13 @@ object Starter {
       val code = txt.schema_slick(table).toString()
       print(code)
       //helper.writeUTF8File("src/main/scala/model/entities/" + table.caseclassname + ".scala", code)
-
     }else {
-
-      val fs = getListOfAllowedFiles(Configuration.inputdirs, allowed).map(_.getAbsolutePath)
-      val data: Array[Array[String]] = fs.filter(_.endsWith("xlsx")).flatMap(ta2020.TableFromExcel.procSingleExcelGeneral("ta2020_", _).asScala).head.getData
-      helper.writeUTF8File(Configuration.outputdir + "index.html",html.index(Configuration.htmltitle, Sidebar.entries, data).toString())
+      //val fs = getListOfAllowedFiles(Config.inputdirs, allowed).map(_.getAbsolutePath)
+      val fs = config.inputfiles
+      assert(new File(fs.head).exists())
+      val data: Array[Array[String]] = ta2020.TableFromExcel.procSingleExcelGeneral("ta2020_", fs.head).asScala.head.getData
+      val filtered = data.filter(l=>l.take(4).map(_.trim.length).sum >0)
+      helper.writeUTF8File(Config.outputdir + "index.html",html.index(filtered, config).toString())
     }
   }
 

@@ -66,9 +66,7 @@ public class TableFromExcel {
 
     static private boolean processsheet(final Path p, final String sheetname){
         boolean result = false;
-        final String fileName = p.getFileName().toString();
-        if(fileName.startsWith("TA") && sheetname.startsWith("Meldungen")) result = true;
-        return result;
+        return sheetname.contains("Meldungen");
     }
 
     public String getName() {

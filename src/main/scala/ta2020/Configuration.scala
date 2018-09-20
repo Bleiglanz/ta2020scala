@@ -15,26 +15,44 @@
 // limitations under the License.
 package ta2020
 
-import java.text.{DateFormat, SimpleDateFormat}
+import java.text.DateFormat
 import java.util.{Calendar, Locale}
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{ConfigFactory, ConfigList, ConfigValue}
 
 import collection.JavaConverters._
+import scala.collection.mutable
 
+trait Configuration{
+  def inputdirs:List[String]
+  def inputfiles:List[String]
+  def outputdir:String
+  def htmltitle:String
+  def infosystemTa:String
+  def uilinks:List[(String,String)]
+  def uihome:String
+}
 
-object Configuration {
+case object Config extends Configuration {
 
-  private val format:DateFormat = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.FULL, Locale.GERMANY);
+  private val dateformat:DateFormat = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.FULL, Locale.GERMANY)
 
-  private val currentdate:String =format.format(Calendar.getInstance().getTime)
+  private val currentdate:String =dateformat.format(Calendar.getInstance().getTime)
 
-  val config: Config = ConfigFactory.load()
+  private val config: com.typesafe.config.Config = ConfigFactory.load()
 
   val inputdirs:List[String] = config.getStringList("ta2020.inputdirs").asScala.toList
+
+  val inputfiles:List[String] = config.getStringList("ta2020.inputfiles").asScala.toList
 
   val outputdir:String = config.getString("ta2020.outputdir")
 
   val htmltitle:String = config.getString("ta2020.htmltitle") + currentdate
+
+  val infosystemTa:String = config.getString("ta2020.infosystem_ta")
+
+  val uilinks:List[(String,String)] = config.getObjectList("ta2020.ui.links").asScala.toList.map(_.toConfig).map(c=>(c.getString("text"),c.getString("url")))
+
+  val uihome:String = config.getString("ta2020.ui.home")
 
 }

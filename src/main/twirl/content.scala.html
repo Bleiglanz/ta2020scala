@@ -1,20 +1,21 @@
-@(data:Array[Array[String]])
-
-<div class="table-responsive">
-   <table id="maintable" class="table table-striped table-sm display">
+@(data:Array[Array[String]],config:ta2020.Configuration)
+<div class="">
+   <table id="maintable" class="table table-sm table-striped table-bordered">
      <thead>
        <tr>
-           <th>TA MELDUNG NUMMER</th>
+           <th>TA.NR</th>
            <th>NAME</th>
-           <th>Bemerkung</th>
+           <th>DESCR</th>
        </tr>
      </thead>
      <tbody>
      @for(line<-data) {
          <tr>
-         @for(s <- line.drop(2)take(3)) {
-             <td>@s</td>
-         }
+             <td><a href="@{config.infosystemTa + "System "+line.head.take(4) + "/TA." + line(2).take(4) + "-" + line(2).slice(5,8) }" target="_blank">
+             @{if(line(2).isEmpty) line.head else line(2)}</a>&nbsp;
+             </td>
+             <td>@line(3)&nbsp; </td>
+             <td>@line(4)&nbsp; </td>
          </tr>
      }
      </tbody>

@@ -25,7 +25,7 @@ import scala.concurrent.duration.Duration
 
 object TADatabase {
 
-  case class User(id:Long, username:String)
+  final case class User(id:Long, username:String)
 
 
   // Schema for the "message" table:
