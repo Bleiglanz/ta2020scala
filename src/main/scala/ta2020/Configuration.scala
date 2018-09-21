@@ -17,13 +17,12 @@ package ta2020
 
 import java.text.DateFormat
 import java.util.{Calendar, Locale}
-
-import com.typesafe.config.{ConfigFactory, ConfigList, ConfigValue}
-
+import com.typesafe.config.ConfigFactory
 import collection.JavaConverters._
-import scala.collection.mutable
+import slick.jdbc.PostgresProfile.api._
 
 trait Configuration{
+  def db:Database
   def inputdirs:List[String]
   def inputfiles:List[String]
   def outputdir:String
@@ -40,6 +39,8 @@ case object Config extends Configuration {
   private val currentdate:String =dateformat.format(Calendar.getInstance().getTime)
 
   private val config: com.typesafe.config.Config = ConfigFactory.load()
+
+  val db:Database = Database.forConfig("ta2020.db")
 
   val inputdirs:List[String] = config.getStringList("ta2020.inputdirs").asScala.toList
 
