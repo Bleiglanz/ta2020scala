@@ -26,14 +26,17 @@ object Starter {
 
     val config = Config
 
+
     if (args.contains("gen")){
-      print("Hi\n")
       val schema:String = txt.schema_sql(model.Schema.tables).toString()
-      print(schema)
       helper.writeUTF8File("src/main/resources/schema.sql",schema)
-      val table = model.Schema.tables.head
-      val code = txt.schema_slick(table).toString()
-      print(code)
+
+      for(table <- model.Schema.tables){
+        print(schema)
+        val code = txt.schema_slick(table).toString()
+        print(code)
+      }
+
       //helper.writeUTF8File("src/main/scala/model/entities/" + table.caseclassname + ".scala", code)
     }else {
       //val fs = getListOfAllowedFiles(Config.inputdirs, allowed).map(_.getAbsolutePath)
