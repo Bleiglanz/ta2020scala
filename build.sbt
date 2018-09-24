@@ -20,6 +20,12 @@ version := "0.1"
 
 scalaVersion := "2.12.6"
 
+maintainer := "Anton Rechenauer <antonrechenauer@gmail.com>"
+
+packageSummary := "TA2020 debian package"
+
+packageDescription := """A sw for creating local files"""
+
 scalacOptions ++= Seq(
   "-deprecation",
   "-encoding", "UTF-8",
@@ -57,5 +63,9 @@ scalaBinaryVersion in ThisBuild := "2.12"
 //wartremoverWarnings ++= Warts.all
 
 enablePlugins(SbtTwirl)
+
+enablePlugins(JavaAppPackaging)
+
+enablePlugins(DockerPlugin)
 
 TwirlKeys.templateImports += "ta2020._"
