@@ -3,17 +3,18 @@ package model
 
 object Schema {
 
-  private val documents = DBTable("dokumente",List(
-    DBText("name"),
+  private val document = DBTable("document",List(
+    DBString("name"),
+    DBString("doctype"),
     DBString("fullpath"),
     DBString("extension"),
     DBLong("size")
   ))
 
   private val mergetables = DBTable("mergetable",
-    (for(i<-1 to 50; col = DBText(s"S$i")) yield col).toList
+    (for(i<-1 to 50; col = DBString(s"S$i")) yield col).toList
   )
 
-  val tables:List[DBTable] = List(documents, mergetables)
+  val tables:List[DBTable] = List(document)
 }
 

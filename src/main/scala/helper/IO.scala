@@ -17,25 +17,43 @@ package helper
 
 import java.io.File
 
+import model.entities.Document
+import slick.dbio.DBIOAction
+
 import scala.annotation.tailrec
+import slick.jdbc.PostgresProfile.api._
+
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration._
 
 object IO {
 
-  private def allowed(file: File): Boolean = Option(file) match {
+  private def fileAllowed(file: File): Boolean = Option(file) match {
     case None => false
     case Some(f) => f.exists && f.isFile
   }
 
-  def getListOfAllowedFiles(dirs: List[String], files: List[String], pred: File => Boolean = allowed): List[File] = {
+  def getListOfAllowedFiles(dirs: List[String], filenames: List[String], pred: File => Boolean = fileAllowed): List[Document] = {
 
-    @tailrec def scanDirs(dirs: List[File], files: List[File]): List[File] = dirs match {
-      case Nil => files
+    def makedoc(f:File):Document = {
+      val name = f.getName
+      Document(None,name,"",f.getAbsolutePath,name.split('.').last,f.length)
+    }
+
+    @tailrec def scanDirs(dirs: List[File], docs: List[Document]): List[Document] = dirs match {
+      case Nil => docs
       case head :: rest => Option(head.listFiles) match {
-        case None => scanDirs(rest, files)
-        case Some(l) => scanDirs(l.filter(_.isDirectory).toList ::: rest, l.filter(f => pred(f)).toList ::: files)
+        case None => scanDirs(rest, docs)
+        case Some(l) => scanDirs(l.filter(_.isDirectory).toList ::: rest, l.filter(f => pred(f)).toList.map(makedoc) ::: docs)
       }
     }
     val df = dirs.map(new File(_)).filter(_.isDirectory)
-    scanDirs(df, files.map(new File(_)).filter(pred))
+    scanDirs(df, filenames.map(new File(_)).filter(pred).map(makedoc))
+  }
+
+  def executeDBIOSeq(actions:DBIOAction[Unit, NoStream, _] )(implicit db:Database): Unit ={
+    val timeout = 25.seconds
+    val f: Future[Unit] = db.run(actions)
+    Await.result(f, timeout)
   }
 }

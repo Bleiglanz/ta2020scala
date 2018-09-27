@@ -20,11 +20,6 @@ package object model {
     override def sca:String = "String"
   }
 
-  final case class DBText(name:String, nullable:Boolean=false) extends DBField{
-    override def ddl:String = s"$name varchar(2000) ${ifnull(nullable)}"
-    override def sca:String = "String"
-  }
-
   final case class DBLong(name:String, nullable:Boolean=false) extends DBField{
     override def ddl:String = s"$name bigint ${ifnull(nullable)}"
     override def sca:String = "Long"

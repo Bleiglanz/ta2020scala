@@ -18,7 +18,8 @@ import java.io.File
 import ta2020.Config
 
 import collection.JavaConverters._
-import scala.annotation.tailrec
+import helper._
+import model.entities.Document
 
 object Starter {
 
@@ -26,25 +27,31 @@ object Starter {
 
     val config = Config
 
+    implicit val db = config.db
 
-    if (args.contains("gen")){
-      val schema:String = txt.schema_sql(model.Schema.tables).toString()
-      helper.writeUTF8File("src/main/resources/schema.sql",schema)
+    if (args.contains("gen")) {
+      val schema: String = txt.schema_sql(model.Schema.tables).toString()
+      writeUTF8File("src/main/resources/schema.sql", schema)
 
-      for(table <- model.Schema.tables){
+      for (table <- model.Schema.tables) {
         print(schema)
         val code = txt.schema_slick(table).toString()
         print(code)
+        writeUTF8File(fname = "src/main/scala/model/entities/" + table.caseclassname + ".scala", code)
       }
 
       //helper.writeUTF8File("src/main/scala/model/entities/" + table.caseclassname + ".scala", code)
-    }else {
+    } else if (args.contains("create")) {
+      IO.executeDBIOSeq(Document.dropAction andThen Document.createAction)
+      val docs = IO.getListOfAllowedFiles(config.inputdirs,config.inputfiles)
+      IO.executeDBIOSeq(Document.insertAction(docs))
+    } else {
       //val fs = getListOfAllowedFiles(Config.inputdirs, allowed).map(_.getAbsolutePath)
       val fs = config.inputfiles
       assert(new File(fs.head).exists())
       val data: Array[Array[String]] = ta2020.TableFromExcel.procSingleExcelGeneral("ta2020_", fs.head).asScala.head.getData
-      val filtered = data.filter(l=>l.take(4).map(_.trim.length).sum >0)
-      helper.writeUTF8File(Config.outputdir + "index.html",html.index(filtered, config).toString())
+      val filtered = data.filter(l => l.take(4).map(_.trim.length).sum > 0)
+      helper.writeUTF8File(Config.outputdir + "index.html", html.index(filtered, config).toString())
     }
   }
 }

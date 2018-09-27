@@ -1,4 +1,4 @@
-@(t:model.DBTable)@name=@{t.name}@cclass=@{t.caseclassname}// Copyright (C) 2011-2012 the original author or authors.
+// Copyright (C) 2011-2012 the original author or authors.
 // See the LICENCE.txt file distributed with this work for additional
 // information regarding copyright ownership.
 //
@@ -18,23 +18,32 @@ package model.entities
 import slick.jdbc.PostgresProfile.api._
 import slick.lifted.ProvenShape
 
-object @{cclass}{
-  val all = TableQuery[@{cclass}Table]
+object Document{
+  val all = TableQuery[DocumentTable]
   val schema = all.schema
   def dropAction: DBIOAction[Unit, NoStream, Effect.Schema] = DBIO.seq(schema.drop )
   def createAction: DBIOAction[Unit, NoStream, Effect.Schema] = DBIO.seq(schema.create)
-  def insertAction(data:Seq[@cclass]):DBIOAction[Unit, NoStream, Effect.Write] = DBIO.seq(all ++= data)
+  def insertAction(data:Seq[Document]):DBIOAction[Unit, NoStream, Effect.Write] = DBIO.seq(all ++= data)
 }
 
-case class @{cclass} (
+case class Document (
   id:Option[Long],
-  @t.fields.map(_.scaladecl).mkString("",",\n  ","\n")
+  name:String,
+  doctype:String,
+  fullpath:String,
+  extension:String,
+  size:Long
+
 )
 
-final class @{cclass}Table(tag: Tag) extends Table[@cclass](tag, "@name") {
-  def id:Rep[Long] = column[Long]("id", O.PrimaryKey, O.AutoInc)@for(f<-t.fields){
-  def @f.name:Rep[@f.sca] = column[@f.sca]("@f.name")}
-  def * : ProvenShape[@cclass] = (id.?,@{t.fields.map(_.name).mkString(",")}) <> ((@{cclass}.apply _).tupled,@{cclass}.unapply)
+final class DocumentTable(tag: Tag) extends Table[Document](tag, "document") {
+  def id:Rep[Long] = column[Long]("id", O.PrimaryKey, O.AutoInc)
+  def name:Rep[String] = column[String]("name")
+  def doctype:Rep[String] = column[String]("doctype")
+  def fullpath:Rep[String] = column[String]("fullpath")
+  def extension:Rep[String] = column[String]("extension")
+  def size:Rep[Long] = column[Long]("size")
+  def * : ProvenShape[Document] = (id.?,name,doctype,fullpath,extension,size) <> ((Document.apply _).tupled,Document.unapply)
 }
 
 
