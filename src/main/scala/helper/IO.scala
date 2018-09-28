@@ -17,7 +17,7 @@ package helper
 
 import java.io.File
 
-import model.entities.Document
+//import model.entities.Document
 import slick.dbio.DBIOAction
 
 import scala.annotation.tailrec
@@ -32,7 +32,7 @@ object IO {
     case None => false
     case Some(f) => f.exists && f.isFile
   }
-
+/*
   def getListOfAllowedFiles(dirs: List[String], filenames: List[String], pred: File => Boolean = fileAllowed): List[Document] = {
 
     def makedoc(f:File):Document = {
@@ -55,5 +55,5 @@ object IO {
     val timeout = 25.seconds
     val f: Future[Unit] = db.run(actions)
     Await.result(f, timeout)
-  }
+  }*/
 }

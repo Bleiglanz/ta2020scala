@@ -19,7 +19,7 @@ import ta2020.Config
 
 import collection.JavaConverters._
 import helper._
-import model.entities.Document
+//import model.entities.Document
 
 object Starter {
 
@@ -42,9 +42,9 @@ object Starter {
 
       //helper.writeUTF8File("src/main/scala/model/entities/" + table.caseclassname + ".scala", code)
     } else if (args.contains("create")) {
-      IO.executeDBIOSeq(Document.dropAction andThen Document.createAction)
-      val docs = IO.getListOfAllowedFiles(config.inputdirs,config.inputfiles)
-      IO.executeDBIOSeq(Document.insertAction(docs))
+//      IO.executeDBIOSeq(Document.dropAction andThen Document.createAction)
+//      val docs = IO.getListOfAllowedFiles(config.inputdirs,config.inputfiles)
+//      IO.executeDBIOSeq(Document.insertAction(docs))
     } else {
       //val fs = getListOfAllowedFiles(Config.inputdirs, allowed).map(_.getAbsolutePath)
       val fs = config.inputfiles
