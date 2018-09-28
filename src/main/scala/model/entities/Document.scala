@@ -33,7 +33,6 @@ case class Document (
   fullpath:String,
   extension:String,
   size:Long
-
 )
 
 final class DocumentTable(tag: Tag) extends Table[Document](tag, "document") {

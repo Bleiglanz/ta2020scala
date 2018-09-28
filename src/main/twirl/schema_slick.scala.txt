@@ -28,8 +28,7 @@ object @{cclass}{
 
 case class @{cclass} (
   id:Option[Long],
-  @t.fields.map(_.scaladecl).mkString("",",\n  ","\n")
-)
+  @t.fields.map(_.scaladecl).mkString("",",\n  ","\n"))
 
 final class @{cclass}Table(tag: Tag) extends Table[@cclass](tag, "@name") {
   def id:Rep[Long] = column[Long]("id", O.PrimaryKey, O.AutoInc)@for(f<-t.fields){

@@ -30,6 +30,7 @@ trait Configuration{
   def infosystemTa:String
   def uilinks:List[(String,String)]
   def uihome:String
+  def howmanyexcelcomlumns:Int
 }
 
 case object Config extends Configuration {
@@ -55,5 +56,7 @@ case object Config extends Configuration {
   val uilinks:List[(String,String)] = config.getObjectList("ta2020.ui.links").asScala.toList.map(_.toConfig).map(c=>(c.getString("text"),c.getString("url")))
 
   val uihome:String = config.getString("ta2020.ui.home")
+
+  val howmanyexcelcomlumns:Int = config.getInt("ta2020.howmanyexcelcomlumns")
 
 }

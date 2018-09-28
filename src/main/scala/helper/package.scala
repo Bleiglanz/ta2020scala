@@ -10,6 +10,8 @@ package object helper {
     pw.close()
   }
 
+  val isExcel:String => Boolean = List("xls", "xlsm", "xlsx").contains(_)
+
 }
 
 

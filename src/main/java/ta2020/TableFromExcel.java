@@ -7,6 +7,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileInputStream;
 import java.nio.file.Path;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.text.DateFormat;
@@ -31,7 +32,7 @@ public class TableFromExcel {
         return null == s || 0 == s.trim().length();
     }
 
-    public static List<TableFromExcel> procSingleExcelGeneral(String prefix, String filename){
+    public static List<TableFromExcel> procSingleExcelGeneral(String prefix, String filename, Connection conn){
         //List<Path> pathsToExcelFiles
         Path p = java.nio.file.Paths.get(filename);
         ArrayList<TableFromExcel> result = new ArrayList<>();
@@ -56,7 +57,19 @@ public class TableFromExcel {
                     Sheet s = wb.getSheetAt(i);
                     if(processsheet(p,s.getSheetName())) {
                         TableFromExcel tabelle = new TableFromExcel(p.toAbsolutePath().toString(), s, eval, prefix, null);
-                        if(null!=tabelle.getData() && tabelle.getData().length>0) result.add(tabelle);
+                        if(null!=tabelle.getData() && tabelle.getData().length>0) {
+                            result.add(tabelle);
+
+                            try {
+                                tabelle.createTable(conn);
+                                tabelle.insertRows(conn);
+                            } catch (SQLException e) {
+                                System.out.println(e);
+                                e.printStackTrace();
+                            } finally {
+                                System.out.println("Tabelle "+tabelle.name+" erzeugt");
+                            }
+                        }
                     }
                 }
             }  // end workbook is not null
@@ -92,7 +105,7 @@ public class TableFromExcel {
     private TableFromExcel(final String pfad, final Sheet sheet, final FormulaEvaluator a_evaluator, String prefix, String fname) {
         if (null == prefix) prefix = "";
         String tempname = null == fname ? prefix.concat(cleanString(pfad.concat("_").concat(sheet.getSheetName()))) : fname;
-        this.name = (tempname.length() > 124 ? tempname.substring(0, 124) : tempname).toLowerCase();
+        this.name = ((tempname.length() > 124 ? tempname.substring(0, 124) : tempname).toLowerCase()).replace('-','_');
         this.evaluator = a_evaluator;
         this.zeilen = sheet.getPhysicalNumberOfRows();
         int max_spalten = 0;
@@ -229,19 +242,12 @@ public class TableFromExcel {
         return result;
     }
 
-    public String toString() {
-        return this.name;
-        //return "--Name:" + this.name + " Zeilen:" + this.zeilen + " Spalten: " + this.spalten + "fill" + Arrays.toString(this.columnNonEmptyCount);
-    }
-
-
-    public void insertRows(java.sql.Connection conn) throws SQLException {
+    private void insertRows(java.sql.Connection conn) throws SQLException {
         if (0 == this.zeilen) return;
-        // build sql string INSERT INTO x (label) values (?,?,?,...)
         StringBuilder sql = new StringBuilder();
-        sql.append("INSERT INTO [dbo].[").append(this.name).append("] (");
+        sql.append("INSERT INTO \"").append(this.name).append("\" (");
         for (int s = 0; s < this.spalten; s++) {
-            sql.append("[").append(this.columnNames[s]).append("]").append(this.spalten - 1 == s ? "" : ",");
+            sql.append(" ").append(this.columnNames[s]).append(" ").append(this.spalten - 1 == s ? "" : ",");
         }
         sql.append(") VALUES (");
         for (int s = 0; s < this.spalten; s++) {
@@ -256,38 +262,31 @@ public class TableFromExcel {
             ps.addBatch();
             if (0 == z % 1000) ps.executeBatch();
         }
-        ps.executeBatch();
+        int[] res = ps.executeBatch();
+        System.out.println("inserted "+res.length+"rows into "+this.name);
     }
 
-    public void createTable(java.sql.Connection conn) throws SQLException {
+    private void createTable(java.sql.Connection conn) throws SQLException {
+        if(this.name.length()>60){
+            System.out.println("WARNING - TABLENAME MIGHT BE TOO LONG"+this.name);
+        }
         final String newline = System.getProperty("line.separator");
         StringBuilder sql;
         // first drop table
         sql = new StringBuilder();
-        sql.append("IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[").append(this.name).append("]') AND type in (N'U')) DROP TABLE [dbo].[");
-        sql.append(this.name).append("]");
-        conn.createStatement().execute(sql.toString());
+        String cmd = sql.append("DROP TABLE IF EXISTS \"").append(this.name).append("\"").toString();
+        //System.out.println("\n\n\nDROP try to execute == \n++++++++++++++"+cmd);
+        conn.createStatement().execute(cmd);
         // create new table
         sql = new StringBuilder();
-        sql.append("CREATE TABLE [dbo].[");
-        sql.append(this.name);
-        sql.append("] (");
-        sql.append("[IMPORTPK] [int] IDENTITY(1,1) NOT NULL ");
+        sql.append("create table \"").append(this.name).append("\"(\nid bigserial not null\n" +
+                        "    primary key");
         for (int i = 0; i < this.spalten; i++) {
-            sql.append(", [").append(cleanString(this.columnNames[i])).append("] [nvarchar](").append(this.columnWidth[i]).append(")");
+            sql.append(",\n ").append(cleanString(this.columnNames[i])).append(" varchar(").append(this.columnWidth[i]).append(") not null");
         }
-        sql.append(", [check_systeme_fid]      INT NULL  CONSTRAINT [fk_systeme").append(name).append("] FOREIGN KEY REFERENCES dbo.systeme(systeme_id)");
-        sql.append(", [check_grliste_fid]      INT NULL  CONSTRAINT [fk_grliste").append(name).append("] FOREIGN KEY REFERENCES dbo.grliste(grliste_id)");
-        sql.append(", [check_ressourcen_fid]   INT NULL  CONSTRAINT [fk_ressour").append(name).append("] FOREIGN KEY REFERENCES dbo.ressourcen(ressourcen_id)");
-        sql.append(", [check_person_fid]       INT NULL  CONSTRAINT [fk_persone").append(name).append("] FOREIGN KEY REFERENCES dbo.verantwortliche(verantwortliche_id)");
-        sql.append(", [check_terminplan_fid]   INT NULL  CONSTRAINT [fk_terminp").append(name).append("] FOREIGN KEY REFERENCES dbo.terminplaene(terminplaene_id)");
-        sql.append(", [check_arbeiten_fid]     INT NULL  CONSTRAINT [fk_arbeite").append(name).append("] FOREIGN KEY REFERENCES dbo.arbeiten(arbeiten_id)");
-        sql.append(" CONSTRAINT [PK_").append(this.name).append("] PRIMARY KEY CLUSTERED ([IMPORTPK] ASC ) WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]) ON [PRIMARY] ");
-        conn.createStatement().execute(sql.toString());
-//        DatabaseOperations db = new DatabaseOperations(conn);
-//        String[] lookupColumns = new String[]{"check_systeme_fid", "check_grliste_fid", "check_ressourcen_fid", "check_person_fid", "check_terminplan_fid"};
-//        db.createIndices(name, lookupColumns);
-//        db.createIndices(name, new String[]{"S0", "S1"});
+        cmd = sql.append(")").toString();
+        //System.out.println("\n\n\nCREATE try to execute == \n++++++++++++++"+cmd);
+        conn.createStatement().execute(cmd);
     }
 }
 

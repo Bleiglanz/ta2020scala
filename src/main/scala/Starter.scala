@@ -13,13 +13,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import java.io.File
+
 
 import ta2020.Config
-
-import collection.JavaConverters._
 import helper._
-//import model.entities.Document
+import model.entities.Document
+import slick.jdbc.PostgresProfile
 
 object Starter {
 
@@ -27,7 +26,7 @@ object Starter {
 
     val config = Config
 
-    implicit val db = config.db
+    implicit val db: PostgresProfile.api.Database = config.db
 
     if (args.contains("gen")) {
       val schema: String = txt.schema_sql(model.Schema.tables).toString()
@@ -42,16 +41,23 @@ object Starter {
 
       //helper.writeUTF8File("src/main/scala/model/entities/" + table.caseclassname + ".scala", code)
     } else if (args.contains("create")) {
-//      IO.executeDBIOSeq(Document.dropAction andThen Document.createAction)
-//      val docs = IO.getListOfAllowedFiles(config.inputdirs,config.inputfiles)
-//      IO.executeDBIOSeq(Document.insertAction(docs))
+        IO.executeDBIOSeq(Document.dropAction andThen Document.createAction)
+        val docs = IO.getListOfAllowedFiles(config.inputdirs,config.inputfiles)
+        IO.executeDBIOSeq(Document.insertAction(docs))
+        val session = db.createSession
+        try {
+          docs.filter(d=>isExcel(d.extension)).foreach { doc =>
+            ta2020.TableFromExcel.procSingleExcelGeneral("ta2020", doc.fullpath, session.conn)
+          }
+        } finally { session.close}
+
     } else {
       //val fs = getListOfAllowedFiles(Config.inputdirs, allowed).map(_.getAbsolutePath)
       val fs = config.inputfiles
-      assert(new File(fs.head).exists())
-      val data: Array[Array[String]] = ta2020.TableFromExcel.procSingleExcelGeneral("ta2020_", fs.head).asScala.head.getData
-      val filtered = data.filter(l => l.take(4).map(_.trim.length).sum > 0)
-      helper.writeUTF8File(Config.outputdir + "index.html", html.index(filtered, config).toString())
+      //assert(new File(fs.head).exists())
+      //val data: Array[Array[String]] = ta2020.TableFromExcel.procSingleExcelGeneral("ta2020_", fs.head,null).asScala.head.getData
+      //val filtered = data.filter(l => l.take(4).map(_.trim.length).sum > 0)
+      //helper.writeUTF8File(Config.outputdir + "index.html", html.index(filtered, config).toString())
     }
   }
 }
