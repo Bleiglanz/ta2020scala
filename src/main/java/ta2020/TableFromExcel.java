@@ -11,20 +11,17 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.text.DateFormat;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
-
 
 
 public class TableFromExcel {
 
     private static String cleanString(String s) {
         if (null == s) return "";
-        s=s.toUpperCase();
-        s=s.replace(" ", "_").replace("/", "_").replace(":", "_").replace("\\", "_").replace("'","_").replace("\\n","").replace("\\r","").replace("&","u");
-        s=s.replace("(", "_").replace(")", "_").replace("[","_").replace("]","_").replace(".","_");
-        s=s.replace("Ü","UE").replace("Ä","AE").replace("Ö","ÖE");
+        s = s.toUpperCase();
+        s = s.replace(" ", "_").replace("/", "_").replace(":", "_").replace("\\", "_").replace("'", "_").replace("\\n", "").replace("\\r", "").replace("&", "u");
+        s = s.replace("(", "_").replace(")", "_").replace("[", "_").replace("]", "_").replace(".", "_");
+        s = s.replace("Ü", "UE").replace("Ä", "AE").replace("Ö", "ÖE");
         return s;
     }
 
@@ -32,54 +29,46 @@ public class TableFromExcel {
         return null == s || 0 == s.trim().length();
     }
 
-    public static List<TableFromExcel> procSingleExcelGeneral(String prefix, String filename, Connection conn){
+    public static void procSingleExcelGeneral(String prefix, String filename, String sheetname,  Connection conn) {
         //List<Path> pathsToExcelFiles
         Path p = java.nio.file.Paths.get(filename);
-        ArrayList<TableFromExcel> result = new ArrayList<>();
+        //System.out.println("Excelfile recognized "+p.toFile().getAbsolutePath());
 
-            // 4.1: generate a workbook if possible
-            Workbook wb = null;
+        // 4.1: generate a workbook if possible
+        Workbook wb = null;
+        try {
+            wb = new HSSFWorkbook(new FileInputStream(p.toFile()));
+        } catch (Exception e1) {
             try {
-                wb = new HSSFWorkbook(new FileInputStream(p.toFile()));
-            } catch (Exception e1) {
-                try {
-                    wb = new XSSFWorkbook(new FileInputStream(p.toFile()));
-                } catch (Exception e2) {
-                    System.out.println("Kann Workbook nicht erstellen xls / oder xslt \n" + p.toString() + e2);
-                }
+                wb = new XSSFWorkbook(new FileInputStream(p.toFile()));
+            } catch (Exception e2) {
+                System.out.println("Kann Workbook nicht erstellen xls / oder xslt \n" + p.toString() + e2);
             }
-            // 4.2: if there is a workbook, generate a Table for each sheet
-            if (null != wb) {
-                // only one evaluator for each workbook
-                FormulaEvaluator eval = wb.getCreationHelper().createFormulaEvaluator();
-                int sheets = wb.getNumberOfSheets();
-                for (int i = 0; i < sheets; i++) {
-                    Sheet s = wb.getSheetAt(i);
-                    if(processsheet(p,s.getSheetName())) {
-                        TableFromExcel tabelle = new TableFromExcel(p.toAbsolutePath().toString(), s, eval, prefix, null);
-                        if(null!=tabelle.getData() && tabelle.getData().length>0) {
-                            result.add(tabelle);
-
-                            try {
-                                tabelle.createTable(conn);
-                                tabelle.insertRows(conn);
-                            } catch (SQLException e) {
-                                System.out.println(e);
-                                e.printStackTrace();
-                            } finally {
-                                System.out.println("Tabelle "+tabelle.name+" erzeugt");
-                            }
+        }
+        // 4.2: if there is a workbook, generate a Table for each sheet
+        if (null != wb) {
+            // only one evaluator for each workbook
+            FormulaEvaluator eval = wb.getCreationHelper().createFormulaEvaluator();
+            int sheets = wb.getNumberOfSheets();
+            for (int i = 0; i < sheets; i++) {
+                Sheet s = wb.getSheetAt(i);
+                //System.out.println("Excelsheet detected"+s.getSheetName());
+                if (sheetname.equals(s.getSheetName())) {
+                    TableFromExcel tabelle = new TableFromExcel(p.toAbsolutePath().getFileName().toString(), s, eval, prefix);
+                    if (null != tabelle.getData() && tabelle.getData().length > 0) {
+                        try {
+                            tabelle.createTable(conn);
+                            tabelle.insertRows(conn);
+                        } catch (SQLException e) {
+                            System.out.println(e.getMessage());
+                            e.printStackTrace();
+                        } finally {
+                           // System.out.println("Tabelle " + tabelle.name + " erzeugt und Zeilen eingefügt");
                         }
                     }
                 }
-            }  // end workbook is not null
-
-        return result;
-    }
-
-    static private boolean processsheet(final Path p, final String sheetname){
-        boolean result = false;
-        return sheetname.contains("Meldungen");
+            }
+        }
     }
 
     public String getName() {
@@ -100,12 +89,14 @@ public class TableFromExcel {
 
     private final int[] columnWidth;
 
-    public String[][] getData(){return data;}
+    public String[][] getData() {
+        return data;
+    }
 
-    private TableFromExcel(final String pfad, final Sheet sheet, final FormulaEvaluator a_evaluator, String prefix, String fname) {
+    private TableFromExcel(final String pfad, final Sheet sheet, final FormulaEvaluator a_evaluator, String prefix) {
         if (null == prefix) prefix = "";
-        String tempname = null == fname ? prefix.concat(cleanString(pfad.concat("_").concat(sheet.getSheetName()))) : fname;
-        this.name = ((tempname.length() > 124 ? tempname.substring(0, 124) : tempname).toLowerCase()).replace('-','_');
+        String tempname = prefix.concat(cleanString(pfad.concat("_").concat(sheet.getSheetName())));
+        this.name = ((tempname.length() > 124 ? tempname.substring(0, 124) : tempname).toLowerCase()).replace('-', '_');
         this.evaluator = a_evaluator;
         this.zeilen = sheet.getPhysicalNumberOfRows();
         int max_spalten = 0;
@@ -204,6 +195,7 @@ public class TableFromExcel {
                     //System.out.println("...Formel"+c.getCellFormula());
                     CellValue cv;
                     try {
+                        if(this.evaluator!=null){
                         cv = this.evaluator.evaluate(c);
                         switch (cv.getCellType()) {
                             case BLANK:
@@ -221,6 +213,9 @@ public class TableFromExcel {
                                 result = cv.getStringValue();
                                 break;
                         }
+                        }else{
+                            result="FORMEL";
+                        }
                     } catch (Exception e) {
                         result = "FORMELFEHLER" + e.getMessage();
                     }
@@ -237,7 +232,7 @@ public class TableFromExcel {
                 }
             }
         } catch (Exception e) {
-            System.out.println(c+"\n"+c.getSheet()+"\n"+e+"\n\n");
+            System.out.println(c + "\n" + c.getSheet() + "\n" + e + "\n\n");
         }
         return result;
     }
@@ -263,29 +258,28 @@ public class TableFromExcel {
             if (0 == z % 1000) ps.executeBatch();
         }
         int[] res = ps.executeBatch();
-        System.out.println("inserted "+res.length+"rows into "+this.name);
+        System.out.println("inserted " + res.length + " rows into " + this.name);
     }
 
     private void createTable(java.sql.Connection conn) throws SQLException {
-        if(this.name.length()>60){
-            System.out.println("WARNING - TABLENAME MIGHT BE TOO LONG"+this.name);
-        }
         final String newline = System.getProperty("line.separator");
+        if (this.name.length() > 60) {
+            System.out.print("WARNING - TABLENAME MIGHT BE TOO LONG" + this.name + newline);
+        }
         StringBuilder sql;
-        // first drop table
+
         sql = new StringBuilder();
-        String cmd = sql.append("DROP TABLE IF EXISTS \"").append(this.name).append("\"").toString();
-        //System.out.println("\n\n\nDROP try to execute == \n++++++++++++++"+cmd);
+        String cmd = sql.append("DROP TABLE IF EXISTS \"").append(this.name).append("\"\n").toString();
         conn.createStatement().execute(cmd);
+
+
         // create new table
         sql = new StringBuilder();
-        sql.append("create table \"").append(this.name).append("\"(\nid bigserial not null\n" +
-                        "    primary key");
+        sql.append("create table \"").append(this.name).append("\"(\nid bigserial not null primary key");
         for (int i = 0; i < this.spalten; i++) {
             sql.append(",\n ").append(cleanString(this.columnNames[i])).append(" varchar(").append(this.columnWidth[i]).append(") not null");
         }
         cmd = sql.append(")").toString();
-        //System.out.println("\n\n\nCREATE try to execute == \n++++++++++++++"+cmd);
         conn.createStatement().execute(cmd);
     }
 }

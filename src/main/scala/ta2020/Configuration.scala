@@ -55,6 +55,8 @@ case object Config extends Configuration {
 
   val uilinks:List[(String,String)] = config.getObjectList("ta2020.ui.links").asScala.toList.map(_.toConfig).map(c=>(c.getString("text"),c.getString("url")))
 
+  val excel2db:List[(String,String)] = config.getObjectList("ta2020.excel.imports").asScala.toList.map(_.toConfig).map(c=>(c.getString("file"),c.getString("sheet")))
+
   val uihome:String = config.getString("ta2020.ui.home")
 
   val howmanyexcelcomlumns:Int = config.getInt("ta2020.howmanyexcelcomlumns")

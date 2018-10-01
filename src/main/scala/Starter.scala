@@ -41,18 +41,22 @@ object Starter {
 
       //helper.writeUTF8File("src/main/scala/model/entities/" + table.caseclassname + ".scala", code)
     } else if (args.contains("create")) {
-        IO.executeDBIOSeq(Document.dropAction andThen Document.createAction)
-        val docs = IO.getListOfAllowedFiles(config.inputdirs,config.inputfiles)
-        IO.executeDBIOSeq(Document.insertAction(docs))
-        val session = db.createSession
-        try {
-          docs.filter(d=>isExcel(d.extension)).foreach { doc =>
-            ta2020.TableFromExcel.procSingleExcelGeneral("ta2020", doc.fullpath, session.conn)
-          }
-        } finally { session.close}
+      IO.executeDBIOSeq(Document.dropAction andThen Document.createAction)
+      val docs = IO.getListOfAllowedFiles(config.inputdirs, config.inputfiles)
+      IO.executeDBIOSeq(Document.insertAction(docs))
+      val session = db.createSession
+      try {
+        Config.excel2db.foreach { case (f: String, s: String) =>
+          ta2020.TableFromExcel.procSingleExcelGeneral("ta2020", f, s, session.conn)
+        }
+      } finally {
+        print("close session..")
+        session.close
+        print("session closed\n\n")
+      }
 
     } else {
-      //val fs = getListOfAllowedFiles(Config.inputdirs, allowed).map(_.getAbsolutePath)
+      //val fs = getListOfAllowedFiles(Config.inputdirs, allowtoped).map(_.getAbsolutePath)
       val fs = config.inputfiles
       //assert(new File(fs.head).exists())
       //val data: Array[Array[String]] = ta2020.TableFromExcel.procSingleExcelGeneral("ta2020_", fs.head,null).asScala.head.getData
