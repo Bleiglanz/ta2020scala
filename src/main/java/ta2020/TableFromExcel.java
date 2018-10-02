@@ -29,7 +29,7 @@ public class TableFromExcel {
         return null == s || 0 == s.trim().length();
     }
 
-    public static void procSingleExcelGeneral(String prefix, String filename, String sheetname, String desttablename, Connection conn) {
+    public static scala.Tuple2<Integer,Integer> procSingleExcelGeneral(String prefix, String filename, String sheetname, String desttablename, Connection conn) {
         //List<Path> pathsToExcelFiles
         Path p = java.nio.file.Paths.get(filename);
         //System.out.println("Excelfile recognized "+p.toFile().getAbsolutePath());
@@ -46,6 +46,7 @@ public class TableFromExcel {
             }
         }
         // 4.2: if there is a workbook, generate a Table for each sheet
+        ta2020.TableFromExcel tabelle = null;
         if (null != wb) {
             // only one evaluator for each workbook
             FormulaEvaluator eval = wb.getCreationHelper().createFormulaEvaluator();
@@ -54,7 +55,7 @@ public class TableFromExcel {
                 Sheet s = wb.getSheetAt(i);
                 //System.out.println("Excelsheet detected"+s.getSheetName());
                 if (sheetname.equals(s.getSheetName())) {
-                    TableFromExcel tabelle = new TableFromExcel(p.toAbsolutePath().getFileName().toString(), s, eval, prefix, desttablename);
+                    tabelle = new TableFromExcel(p.toAbsolutePath().getFileName().toString(), s, eval, prefix, desttablename);
                     if (null != tabelle.getData() && tabelle.getData().length > 0) {
                         try {
                             tabelle.createTable(conn);
@@ -62,13 +63,12 @@ public class TableFromExcel {
                         } catch (SQLException e) {
                             System.out.println(e.getMessage());
                             e.printStackTrace();
-                        } finally {
-                            // System.out.println("Tabelle " + tabelle.name + " erzeugt und Zeilen eingefügt");
                         }
                     }
                 }
             }
         }
+        return null!=tabelle ? new scala.Tuple2<>(tabelle.spalten, tabelle.zeilen) : new scala.Tuple2<>(0,0);
     }
 
     public String getName() {

@@ -18,7 +18,7 @@
 import ta2020.Config
 import ta2020.Config.ExcelImport
 import helper._
-import model.entities.Document
+import model.entities.{Document, Excelsheet}
 import slick.jdbc.PostgresProfile
 
 
@@ -31,26 +31,27 @@ object Starter {
     implicit val db: PostgresProfile.api.Database = config.db
 
     if (args.contains("gen")) {
-      val schema: String = txt.schema_sql(model.Schema.tables).toString()
-      writeUTF8File("src/main/resources/schema.sql", schema)
+
 
       for (table <- model.Schema.tables) {
-        print(schema)
         val code = txt.schema_slick(table).toString()
         print(code)
         writeUTF8File(fname = "src/main/scala/model/entities/" + table.caseclassname + ".scala", code)
       }
 
-      //helper.writeUTF8File("src/main/scala/model/entities/" + table.caseclassname + ".scala", code)
     } else if (args.contains("create")) {
       IO.executeDBIOSeq(Document.dropAction andThen Document.createAction)
+      IO.executeDBIOSeq(Excelsheet.dropAction andThen Excelsheet.createAction)
+
       val docs = IO.getListOfAllowedFiles(config.inputdirs, config.inputfiles)
       IO.executeDBIOSeq(Document.insertAction(docs))
       val session = db.createSession
       try {
-        Config.excel2db.foreach { ex:ExcelImport =>
-          ta2020.TableFromExcel.procSingleExcelGeneral("ta2020", ex.src, ex.sheet, ex.dest, session.conn)
+        val sheets = Config.excel2db.map { ex:ExcelImport =>
+          val (cols,rows) = ta2020.TableFromExcel.procSingleExcelGeneral("ex_", ex.src, ex.sheet, ex.dest, session.conn)
+          model.entities.Excelsheet(None,ex.src,ex.sheet,ex.dest,cols,rows)
         }
+        IO.executeDBIOSeq(Excelsheet.insertAction(sheets))
       } finally {
         print("close session..")
         session.close
@@ -58,7 +59,9 @@ object Starter {
       }
 
     } else if (args.contains("site")){
-        val fs = config.inputfiles
+      import slick.jdbc.PostgresProfile.api._
+      IO.executeDBIOSeq(Excelsheet.selectAction)
+
 
       //val data: Array[Array[String]] = ta2020.TableFromExcel.procSingleExcelGeneral("ta2020_", fs.head,null).asScala.head.getData
       //val filtered = data.filter(l => l.take(4).map(_.trim.length).sum > 0)

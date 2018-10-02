@@ -18,15 +18,16 @@ package model.entities
 import slick.jdbc.PostgresProfile.api._
 import slick.lifted.ProvenShape
 
-object Document{
+case object Document{
   val all = TableQuery[DocumentTable]
   val schema = all.schema
   def dropAction: DBIOAction[Unit, NoStream, Effect.Schema] = DBIO.seq(schema.drop )
   def createAction: DBIOAction[Unit, NoStream, Effect.Schema] = DBIO.seq(schema.create)
   def insertAction(data:Seq[Document]):DBIOAction[Unit, NoStream, Effect.Write] = DBIO.seq(all ++= data)
+  def selectAction: DBIOAction[Unit, NoStream, Effect.Read] = DBIO.seq(all.result)
 }
 
-case class Document (
+final case class Document (
   id:Option[Long],
   name:String,
   doctype:String,

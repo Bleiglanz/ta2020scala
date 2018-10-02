@@ -15,11 +15,10 @@ object Schema {
     DBString("filename"),
     DBString("sheetname"),
     DBString("tablename"),
-    DBInt("numberOfcolumns"),
-    DBLong("size")
+    DBInt("cols"),
+    DBInt("rows")
   ))
 
-
-  val tables:List[DBTable] = List(document)
+  val tables:List[DBTable] = List(document,excelsheet)
 }
 

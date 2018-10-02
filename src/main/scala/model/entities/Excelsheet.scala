@@ -1,4 +1,4 @@
-@(t:model.DBTable)@name=@{t.name}@cclass=@{t.caseclassname}// Copyright (C) 2011-2012 the original author or authors.
+// Copyright (C) 2011-2012 the original author or authors.
 // See the LICENCE.txt file distributed with this work for additional
 // information regarding copyright ownership.
 //
@@ -18,23 +18,32 @@ package model.entities
 import slick.jdbc.PostgresProfile.api._
 import slick.lifted.ProvenShape
 
-case object @{cclass}{
-  val all = TableQuery[@{cclass}Table]
+case object Excelsheet{
+  val all = TableQuery[ExcelsheetTable]
   val schema = all.schema
   def dropAction: DBIOAction[Unit, NoStream, Effect.Schema] = DBIO.seq(schema.drop )
   def createAction: DBIOAction[Unit, NoStream, Effect.Schema] = DBIO.seq(schema.create)
-  def insertAction(data:Seq[@cclass]):DBIOAction[Unit, NoStream, Effect.Write] = DBIO.seq(all ++= data)
+  def insertAction(data:Seq[Excelsheet]):DBIOAction[Unit, NoStream, Effect.Write] = DBIO.seq(all ++= data)
   def selectAction: DBIOAction[Unit, NoStream, Effect.Read] = DBIO.seq(all.result)
 }
 
-final case class @{cclass} (
+final case class Excelsheet (
   id:Option[Long],
-  @t.fields.map(_.scaladecl).mkString("",",\n  ","\n"))
+  filename:String,
+  sheetname:String,
+  tablename:String,
+  cols:Int,
+  rows:Int
+)
 
-final class @{cclass}Table(tag: Tag) extends Table[@cclass](tag, "@name") {
-  def id:Rep[Long] = column[Long]("id", O.PrimaryKey, O.AutoInc)@for(f<-t.fields){
-  def @f.name:Rep[@f.sca] = column[@f.sca]("@f.name")}
-  def * : ProvenShape[@cclass] = (id.?,@{t.fields.map(_.name).mkString(",")}) <> ((@{cclass}.apply _).tupled,@{cclass}.unapply)
+final class ExcelsheetTable(tag: Tag) extends Table[Excelsheet](tag, "excelsheet") {
+  def id:Rep[Long] = column[Long]("id", O.PrimaryKey, O.AutoInc)
+  def filename:Rep[String] = column[String]("filename")
+  def sheetname:Rep[String] = column[String]("sheetname")
+  def tablename:Rep[String] = column[String]("tablename")
+  def cols:Rep[Int] = column[Int]("cols")
+  def rows:Rep[Int] = column[Int]("rows")
+  def * : ProvenShape[Excelsheet] = (id.?,filename,sheetname,tablename,cols,rows) <> ((Excelsheet.apply _).tupled,Excelsheet.unapply)
 }
 
 
