@@ -1,7 +1,0 @@
-@(tablelist:List[model.DBTable])
-@for(t<-tablelist){CREATE TABLE @t.name (
-  id bigserial NOT NULL,
-  @t.fields.map(_.ddl).mkString("",",\n  ",",\n")
-  CONSTRAINT pk_@t.name PRIMARY KEY (id)
-)
-}
