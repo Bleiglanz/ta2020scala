@@ -29,7 +29,7 @@ public class TableFromExcel {
         return null == s || 0 == s.trim().length();
     }
 
-    public static void procSingleExcelGeneral(String prefix, String filename, String sheetname,  Connection conn) {
+    public static void procSingleExcelGeneral(String prefix, String filename, String sheetname, String desttablename, Connection conn) {
         //List<Path> pathsToExcelFiles
         Path p = java.nio.file.Paths.get(filename);
         //System.out.println("Excelfile recognized "+p.toFile().getAbsolutePath());
@@ -54,7 +54,7 @@ public class TableFromExcel {
                 Sheet s = wb.getSheetAt(i);
                 //System.out.println("Excelsheet detected"+s.getSheetName());
                 if (sheetname.equals(s.getSheetName())) {
-                    TableFromExcel tabelle = new TableFromExcel(p.toAbsolutePath().getFileName().toString(), s, eval, prefix);
+                    TableFromExcel tabelle = new TableFromExcel(p.toAbsolutePath().getFileName().toString(), s, eval, prefix, desttablename);
                     if (null != tabelle.getData() && tabelle.getData().length > 0) {
                         try {
                             tabelle.createTable(conn);
@@ -63,7 +63,7 @@ public class TableFromExcel {
                             System.out.println(e.getMessage());
                             e.printStackTrace();
                         } finally {
-                           // System.out.println("Tabelle " + tabelle.name + " erzeugt und Zeilen eingefügt");
+                            // System.out.println("Tabelle " + tabelle.name + " erzeugt und Zeilen eingefügt");
                         }
                     }
                 }
@@ -93,10 +93,11 @@ public class TableFromExcel {
         return data;
     }
 
-    private TableFromExcel(final String pfad, final Sheet sheet, final FormulaEvaluator a_evaluator, String prefix) {
+    private TableFromExcel(final String pfad, final Sheet sheet, final FormulaEvaluator a_evaluator, String prefix, String desttablename) {
         if (null == prefix) prefix = "";
         String tempname = prefix.concat(cleanString(pfad.concat("_").concat(sheet.getSheetName())));
-        this.name = ((tempname.length() > 124 ? tempname.substring(0, 124) : tempname).toLowerCase()).replace('-', '_');
+        String tempname2 = ((tempname.length() > 124 ? tempname.substring(0, 124) : tempname).toLowerCase()).replace('-', '_');
+        this.name = null != desttablename && desttablename.length() > 0 ? prefix + desttablename : tempname2;
         this.evaluator = a_evaluator;
         this.zeilen = sheet.getPhysicalNumberOfRows();
         int max_spalten = 0;
@@ -195,29 +196,29 @@ public class TableFromExcel {
                     //System.out.println("...Formel"+c.getCellFormula());
                     CellValue cv;
                     try {
-                        if(this.evaluator!=null){
-                        cv = this.evaluator.evaluate(c);
-                        switch (cv.getCellType()) {
-                            case BLANK:
-                                break;
-                            case BOOLEAN:
-                                result = String.valueOf(cv.getBooleanValue());
-                                break;
-                            case ERROR:
-                                result = "Error:".concat(String.valueOf(cv.getErrorValue()));
-                                break;
-                            case NUMERIC:
-                                result = NumberToTextConverter.toText(cv.getNumberValue());
-                                break;
-                            case STRING:
-                                result = cv.getStringValue();
-                                break;
-                        }
-                        }else{
-                            result="FORMEL";
+                        if (this.evaluator != null) {
+                            cv = this.evaluator.evaluate(c);
+                            switch (cv.getCellType()) {
+                                case BLANK:
+                                    break;
+                                case BOOLEAN:
+                                    result = String.valueOf(cv.getBooleanValue());
+                                    break;
+                                case ERROR:
+                                    result = "Error:".concat(String.valueOf(cv.getErrorValue()));
+                                    break;
+                                case NUMERIC:
+                                    result = NumberToTextConverter.toText(cv.getNumberValue());
+                                    break;
+                                case STRING:
+                                    result = cv.getStringValue();
+                                    break;
+                            }
+                        } else {
+                            result = "IGNORE FORMULA";
                         }
                     } catch (Exception e) {
-                        result = "FORMELFEHLER" + e.getMessage();
+                        result = "ERROR IN FORMULA" + e.getMessage();
                     }
                     break;
             }
@@ -264,7 +265,7 @@ public class TableFromExcel {
     private void createTable(java.sql.Connection conn) throws SQLException {
         final String newline = System.getProperty("line.separator");
         if (this.name.length() > 60) {
-            System.out.print("WARNING - TABLENAME MIGHT BE TOO LONG" + this.name + newline);
+            System.out.print("WARNING - NAME MIGHT BE TOO LONG" + this.name + newline);
         }
         StringBuilder sql;
 

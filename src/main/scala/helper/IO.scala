@@ -55,4 +55,5 @@ object IO {
     val f: Future[Unit] = db.run(actions)
     Await.result(f, timeout)
   }
+
 }

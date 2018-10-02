@@ -16,9 +16,11 @@
 
 
 import ta2020.Config
+import ta2020.Config.ExcelImport
 import helper._
 import model.entities.Document
 import slick.jdbc.PostgresProfile
+
 
 object Starter {
 
@@ -46,8 +48,8 @@ object Starter {
       IO.executeDBIOSeq(Document.insertAction(docs))
       val session = db.createSession
       try {
-        Config.excel2db.foreach { case (f: String, s: String) =>
-          ta2020.TableFromExcel.procSingleExcelGeneral("ta2020", f, s, session.conn)
+        Config.excel2db.foreach { ex:ExcelImport =>
+          ta2020.TableFromExcel.procSingleExcelGeneral("ta2020", ex.src, ex.sheet, ex.dest, session.conn)
         }
       } finally {
         print("close session..")
@@ -55,13 +57,12 @@ object Starter {
         print("session closed\n\n")
       }
 
-    } else {
-      //val fs = getListOfAllowedFiles(Config.inputdirs, allowtoped).map(_.getAbsolutePath)
-      val fs = config.inputfiles
-      //assert(new File(fs.head).exists())
+    } else if (args.contains("site")){
+        val fs = config.inputfiles
+
       //val data: Array[Array[String]] = ta2020.TableFromExcel.procSingleExcelGeneral("ta2020_", fs.head,null).asScala.head.getData
       //val filtered = data.filter(l => l.take(4).map(_.trim.length).sum > 0)
       //helper.writeUTF8File(Config.outputdir + "index.html", html.index(filtered, config).toString())
-    }
+    } else {}
   }
 }

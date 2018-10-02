@@ -11,11 +11,15 @@ object Schema {
     DBLong("size")
   ))
 
-  private val howmanyexcelcomlumns = ta2020.Config.howmanyexcelcomlumns
-  private val mergetables = DBTable("mergetable",
-    (for(i<-1 to howmanyexcelcomlumns ; col = DBString(s"s$i")) yield col).toList
-  )
+  private val excelsheet = DBTable("excelsheet",List(
+    DBString("filename"),
+    DBString("sheetname"),
+    DBString("tablename"),
+    DBInt("numberOfcolumns"),
+    DBLong("size")
+  ))
 
-  val tables:List[DBTable] = List(document,mergetables)
+
+  val tables:List[DBTable] = List(document)
 }
 

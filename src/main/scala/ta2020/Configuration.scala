@@ -17,7 +17,9 @@ package ta2020
 
 import java.text.DateFormat
 import java.util.{Calendar, Locale}
-import com.typesafe.config.ConfigFactory
+
+import com.typesafe.config.{Config=>TypesafeConfig, ConfigFactory}
+
 import collection.JavaConverters._
 import slick.jdbc.PostgresProfile.api._
 
@@ -55,10 +57,17 @@ case object Config extends Configuration {
 
   val uilinks:List[(String,String)] = config.getObjectList("ta2020.ui.links").asScala.toList.map(_.toConfig).map(c=>(c.getString("text"),c.getString("url")))
 
-  val excel2db:List[(String,String)] = config.getObjectList("ta2020.excel.imports").asScala.toList.map(_.toConfig).map(c=>(c.getString("file"),c.getString("sheet")))
+  val excel2db:List[ExcelImport] = config.getObjectList("ta2020.excel.imports").asScala.toList.map(c=>ExcelImport(c.toConfig))
 
   val uihome:String = config.getString("ta2020.ui.home")
 
   val howmanyexcelcomlumns:Int = config.getInt("ta2020.howmanyexcelcomlumns")
 
+  private object ExcelImport {
+    def apply(c:TypesafeConfig):ExcelImport = ExcelImport(c.getString("file"),c.getString("sheet"),c.getString("dest"))
+  }
+
+  case class ExcelImport(src:String, sheet:String, dest:String)
 }
+
+
