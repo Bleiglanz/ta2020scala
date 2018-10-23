@@ -20,37 +20,33 @@ import slick.lifted.ProvenShape
 import slick.sql.SqlProfile.ColumnOption.SqlType
 import java.sql.Timestamp
 
-case object Document{
-  val all = TableQuery[DocumentTable]
+case object Meldungen{
+  val all = TableQuery[MeldungenTable]
   val schema = all.schema
   def dropAction: DBIOAction[Unit, NoStream, Effect.Schema] = DBIO.seq(schema.drop )
   def createAction: DBIOAction[Unit, NoStream, Effect.Schema] = DBIO.seq(schema.create)
-  def insertAction(data:Seq[Document]):DBIOAction[Unit, NoStream, Effect.Write] = DBIO.seq(all ++= data)
-  def selectAction: DBIO[Seq[Document]] = all.result
+  def insertAction(data:Seq[Meldungen]):DBIOAction[Unit, NoStream, Effect.Write] = DBIO.seq(all ++= data)
+  def selectAction: DBIO[Seq[Meldungen]] = all.result
 }
 
-final case class Document (
+final case class Meldungen (
   id:Option[Long],
-  name:String,
-  doctype:String,
-  fullpath:String,
-  extension:String,
-  size:Long,
+  tanr:String,
+  shorttext:String,
+  longtext:String,
   created: Timestamp,
   updated: Timestamp
 )
 
 
-final class DocumentTable(tag: Tag) extends Table[Document](tag, "document") {
+final class MeldungenTable(tag: Tag) extends Table[Meldungen](tag, "meldungen") {
   def id:Rep[Long] = column[Long]("id", O.PrimaryKey, O.AutoInc)
-  def name:Rep[String] = column[String]("name")
-  def doctype:Rep[String] = column[String]("doctype")
-  def fullpath:Rep[String] = column[String]("fullpath")
-  def extension:Rep[String] = column[String]("extension")
-  def size:Rep[Long] = column[Long]("size")
+  def tanr:Rep[String] = column[String]("tanr")
+  def shorttext:Rep[String] = column[String]("shorttext")
+  def longtext:Rep[String] = column[String]("longtext")
   def created:Rep[Timestamp] = column[Timestamp]("created", SqlType("timestamp not null default CURRENT_TIMESTAMP"))
   def updated:Rep[Timestamp] = column[Timestamp]("updated", SqlType("timestamp not null default CURRENT_TIMESTAMP"))
-  def * : ProvenShape[Document] = (id.?,name,doctype,fullpath,extension,size,created,updated) <> ((Document.apply _).tupled,Document.unapply)
+  def * : ProvenShape[Meldungen] = (id.?,tanr,shorttext,longtext,created,updated) <> ((Meldungen.apply _).tupled,Meldungen.unapply)
 }
 
 

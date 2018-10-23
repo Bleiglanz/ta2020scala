@@ -17,6 +17,8 @@ package model.entities
 
 import slick.jdbc.PostgresProfile.api._
 import slick.lifted.ProvenShape
+import slick.sql.SqlProfile.ColumnOption.SqlType
+import java.sql.Timestamp
 
 case object Excelsheet{
   val all = TableQuery[ExcelsheetTable]
@@ -24,7 +26,7 @@ case object Excelsheet{
   def dropAction: DBIOAction[Unit, NoStream, Effect.Schema] = DBIO.seq(schema.drop )
   def createAction: DBIOAction[Unit, NoStream, Effect.Schema] = DBIO.seq(schema.create)
   def insertAction(data:Seq[Excelsheet]):DBIOAction[Unit, NoStream, Effect.Write] = DBIO.seq(all ++= data)
-  def selectAction: DBIOAction[Unit, NoStream, Effect.Read] = DBIO.seq(all.result)
+  def selectAction: DBIO[Seq[Excelsheet]] = all.result
 }
 
 final case class Excelsheet (
@@ -33,8 +35,11 @@ final case class Excelsheet (
   sheetname:String,
   tablename:String,
   cols:Int,
-  rows:Int
+  rows:Int,
+  created: Timestamp,
+  updated: Timestamp
 )
+
 
 final class ExcelsheetTable(tag: Tag) extends Table[Excelsheet](tag, "excelsheet") {
   def id:Rep[Long] = column[Long]("id", O.PrimaryKey, O.AutoInc)
@@ -43,7 +48,9 @@ final class ExcelsheetTable(tag: Tag) extends Table[Excelsheet](tag, "excelsheet
   def tablename:Rep[String] = column[String]("tablename")
   def cols:Rep[Int] = column[Int]("cols")
   def rows:Rep[Int] = column[Int]("rows")
-  def * : ProvenShape[Excelsheet] = (id.?,filename,sheetname,tablename,cols,rows) <> ((Excelsheet.apply _).tupled,Excelsheet.unapply)
+  def created:Rep[Timestamp] = column[Timestamp]("created", SqlType("timestamp not null default CURRENT_TIMESTAMP"))
+  def updated:Rep[Timestamp] = column[Timestamp]("updated", SqlType("timestamp not null default CURRENT_TIMESTAMP"))
+  def * : ProvenShape[Excelsheet] = (id.?,filename,sheetname,tablename,cols,rows,created,updated) <> ((Excelsheet.apply _).tupled,Excelsheet.unapply)
 }
 
 

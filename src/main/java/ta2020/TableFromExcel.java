@@ -250,16 +250,17 @@ public class TableFromExcel {
             sql.append("?").append(this.spalten - 1 == s ? "" : ",");
         }
         sql.append(");");
+        int numrows = 0;
         PreparedStatement ps = conn.prepareStatement(sql.toString());
         for (int z = 0; z < this.zeilen; z++) {
             for (int s = 0; s < this.spalten; s++) {
                 ps.setString(s + 1, this.data[z][s]);
             }
             ps.addBatch();
-            if (0 == z % 1000) ps.executeBatch();
+            if (0 == z % 1000) numrows += ps.executeBatch().length;
         }
-        int[] res = ps.executeBatch();
-        System.out.println("inserted " + res.length + " rows into " + this.name);
+        numrows+=ps.executeBatch().length;
+        System.out.println("last batch inserted " + numrows + " rows into " + this.name);
     }
 
     private void createTable(java.sql.Connection conn) throws SQLException {

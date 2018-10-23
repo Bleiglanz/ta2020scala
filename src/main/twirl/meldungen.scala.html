@@ -1,0 +1,24 @@
+@(meldungen:Seq[model.entities.Meldungen],config:ta2020.Configuration)
+<div class="">
+   <table id="maintable" class="table table-sm table-striped table-bordered">
+     <thead>
+       <tr>
+           <th>TA.NR</th>
+           <th>NAME</th>
+           <th>DESCR</th>
+       </tr>
+     </thead>
+     <tbody>
+     @for(line<-meldungen) {
+         <tr>
+             <td><a href="@{config.infosystemTa + "System "+line.tanr.take(4) + "/TA." + line.tanr.take(4) + "-" + line.tanr.slice(5,8) }" target="_blank">
+             @{if(line.tanr.isEmpty) ??? else line.tanr }</a>&nbsp;
+             </td>
+             <td>@{line.shorttext}&nbsp;</td>
+             <td>@{line.longtext}</td>
+         </tr>
+     }
+     </tbody>
+   </table>
+</div>
+

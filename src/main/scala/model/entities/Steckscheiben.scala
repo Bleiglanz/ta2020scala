@@ -20,37 +20,53 @@ import slick.lifted.ProvenShape
 import slick.sql.SqlProfile.ColumnOption.SqlType
 import java.sql.Timestamp
 
-case object Document{
-  val all = TableQuery[DocumentTable]
+case object Steckscheiben{
+  val all = TableQuery[SteckscheibenTable]
   val schema = all.schema
   def dropAction: DBIOAction[Unit, NoStream, Effect.Schema] = DBIO.seq(schema.drop )
   def createAction: DBIOAction[Unit, NoStream, Effect.Schema] = DBIO.seq(schema.create)
-  def insertAction(data:Seq[Document]):DBIOAction[Unit, NoStream, Effect.Write] = DBIO.seq(all ++= data)
-  def selectAction: DBIO[Seq[Document]] = all.result
+  def insertAction(data:Seq[Steckscheiben]):DBIOAction[Unit, NoStream, Effect.Write] = DBIO.seq(all ++= data)
+  def selectAction: DBIO[Seq[Steckscheiben]] = all.result
 }
 
-final case class Document (
+final case class Steckscheiben (
   id:Option[Long],
-  name:String,
-  doctype:String,
-  fullpath:String,
-  extension:String,
-  size:Long,
+  sysnr:String,
+  sysnr2:String,
+  grnr:String,
+  lfdnr:String,
+  beschreibung:String,
+  rkl:String,
+  dn:String,
+  pn:String,
+  pid:String,
+  apparatenr:String,
+  brille:Boolean,
+  job:Boolean,
+  syssteck:Boolean,
   created: Timestamp,
   updated: Timestamp
 )
 
 
-final class DocumentTable(tag: Tag) extends Table[Document](tag, "document") {
+final class SteckscheibenTable(tag: Tag) extends Table[Steckscheiben](tag, "steckscheiben") {
   def id:Rep[Long] = column[Long]("id", O.PrimaryKey, O.AutoInc)
-  def name:Rep[String] = column[String]("name")
-  def doctype:Rep[String] = column[String]("doctype")
-  def fullpath:Rep[String] = column[String]("fullpath")
-  def extension:Rep[String] = column[String]("extension")
-  def size:Rep[Long] = column[Long]("size")
+  def sysnr:Rep[String] = column[String]("sysnr")
+  def sysnr2:Rep[String] = column[String]("sysnr2")
+  def grnr:Rep[String] = column[String]("grnr")
+  def lfdnr:Rep[String] = column[String]("lfdnr")
+  def beschreibung:Rep[String] = column[String]("beschreibung")
+  def rkl:Rep[String] = column[String]("rkl")
+  def dn:Rep[String] = column[String]("dn")
+  def pn:Rep[String] = column[String]("pn")
+  def pid:Rep[String] = column[String]("pid")
+  def apparatenr:Rep[String] = column[String]("apparatenr")
+  def brille:Rep[Boolean] = column[Boolean]("brille")
+  def job:Rep[Boolean] = column[Boolean]("job")
+  def syssteck:Rep[Boolean] = column[Boolean]("syssteck")
   def created:Rep[Timestamp] = column[Timestamp]("created", SqlType("timestamp not null default CURRENT_TIMESTAMP"))
   def updated:Rep[Timestamp] = column[Timestamp]("updated", SqlType("timestamp not null default CURRENT_TIMESTAMP"))
-  def * : ProvenShape[Document] = (id.?,name,doctype,fullpath,extension,size,created,updated) <> ((Document.apply _).tupled,Document.unapply)
+  def * : ProvenShape[Steckscheiben] = (id.?,sysnr,sysnr2,grnr,lfdnr,beschreibung,rkl,dn,pn,pid,apparatenr,brille,job,syssteck,created,updated) <> ((Steckscheiben.apply _).tupled,Steckscheiben.unapply)
 }
 
 

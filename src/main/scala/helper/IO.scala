@@ -16,9 +16,11 @@
 package helper
 
 import java.io.File
+import java.time.Instant
 
 import model.entities.Document
 import slick.dbio.DBIOAction
+import slick.dbio.Effect.Read
 
 import scala.annotation.tailrec
 import slick.jdbc.PostgresProfile.api._
@@ -36,7 +38,7 @@ object IO {
 
     def makedoc(f:File):Document = {
       val name = f.getName
-      Document(None,name,"",f.getAbsolutePath,name.split('.').last,f.length)
+      Document(None,name,"",f.getAbsolutePath,name.split('.').last,f.length,java.sql.Timestamp.from(Instant.now),java.sql.Timestamp.from(Instant.now))
     }
 
     @tailrec def scanDirs(dirs: List[File], docs: List[Document]): List[Document] = dirs match {
@@ -50,10 +52,15 @@ object IO {
     scanDirs(df, filenames.map(new File(_)).filter(pred).map(makedoc))
   }
 
-  def executeDBIOSeq(actions:DBIOAction[Unit, NoStream, _] )(implicit db:Database): Unit ={
+  def executeDBIOSeq(actions:DBIOAction[Unit, NoStream, _] )(implicit db:Database) : Unit = {
     val timeout = 25.seconds
     val f: Future[Unit] = db.run(actions)
     Await.result(f, timeout)
   }
 
+  def executeDBIOQuery[T](actions:DBIO[Seq[T]])(implicit db:Database) : Seq[T]= {
+    val timeout = 25.seconds
+    val f: Future[Seq[T]] = db.run(actions)
+    Await.result(f, timeout)
+  }
 }

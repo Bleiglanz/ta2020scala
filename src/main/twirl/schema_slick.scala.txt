@@ -17,6 +17,8 @@ package model.entities
 
 import slick.jdbc.PostgresProfile.api._
 import slick.lifted.ProvenShape
+import slick.sql.SqlProfile.ColumnOption.SqlType
+import java.sql.Timestamp
 
 case object @{cclass}{
   val all = TableQuery[@{cclass}Table]
@@ -24,17 +26,23 @@ case object @{cclass}{
   def dropAction: DBIOAction[Unit, NoStream, Effect.Schema] = DBIO.seq(schema.drop )
   def createAction: DBIOAction[Unit, NoStream, Effect.Schema] = DBIO.seq(schema.create)
   def insertAction(data:Seq[@cclass]):DBIOAction[Unit, NoStream, Effect.Write] = DBIO.seq(all ++= data)
-  def selectAction: DBIOAction[Unit, NoStream, Effect.Read] = DBIO.seq(all.result)
+  def selectAction: DBIO[Seq[@{cclass}]] = all.result
 }
 
 final case class @{cclass} (
   id:Option[Long],
-  @t.fields.map(_.scaladecl).mkString("",",\n  ","\n"))
+  @t.fields.map(_.scaladecl).mkString("",",\n  ",",")
+  created: Timestamp,
+  updated: Timestamp
+)
+
 
 final class @{cclass}Table(tag: Tag) extends Table[@cclass](tag, "@name") {
   def id:Rep[Long] = column[Long]("id", O.PrimaryKey, O.AutoInc)@for(f<-t.fields){
   def @f.name:Rep[@f.sca] = column[@f.sca]("@f.name")}
-  def * : ProvenShape[@cclass] = (id.?,@{t.fields.map(_.name).mkString(",")}) <> ((@{cclass}.apply _).tupled,@{cclass}.unapply)
+  def created:Rep[Timestamp] = column[Timestamp]("created", SqlType("timestamp not null default CURRENT_TIMESTAMP"))
+  def updated:Rep[Timestamp] = column[Timestamp]("updated", SqlType("timestamp not null default CURRENT_TIMESTAMP"))
+  def * : ProvenShape[@cclass] = (id.?,@{t.fields.map(_.name).mkString(",")},created,updated) <> ((@{cclass}.apply _).tupled,@{cclass}.unapply)
 }
 
 

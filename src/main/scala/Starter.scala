@@ -15,24 +15,25 @@
 // limitations under the License.
 
 
-import ta2020.Config
-import ta2020.Config.ExcelImport
+import java.sql.Timestamp
+import java.time.Instant
+
+import ta2020.{Config, ExcelImport}
 import helper._
-import model.entities.{Document, Excelsheet}
+import model.entities.{Document, Excelsheet, Meldungen, Steckscheiben}
 import slick.jdbc.PostgresProfile
 
 
 object Starter {
 
   def main(args: Array[String]): Unit = {
+    val now:Timestamp = Timestamp.from(Instant.now)
 
     val config = Config
 
     implicit val db: PostgresProfile.api.Database = config.db
 
     if (args.contains("gen")) {
-
-
       for (table <- model.Schema.tables) {
         val code = txt.schema_slick(table).toString()
         print(code)
@@ -42,14 +43,15 @@ object Starter {
     } else if (args.contains("create")) {
       IO.executeDBIOSeq(Document.dropAction andThen Document.createAction)
       IO.executeDBIOSeq(Excelsheet.dropAction andThen Excelsheet.createAction)
-
-      val docs = IO.getListOfAllowedFiles(config.inputdirs, config.inputfiles)
+      IO.executeDBIOSeq(Meldungen.dropAction andThen Meldungen.createAction)
+      IO.executeDBIOSeq(Steckscheiben.dropAction andThen Steckscheiben.createAction)
+      val docs = IO.getListOfAllowedFiles(config.scandirs, config.scanfiles)
       IO.executeDBIOSeq(Document.insertAction(docs))
       val session = db.createSession
       try {
         val sheets = Config.excel2db.map { ex:ExcelImport =>
           val (cols,rows) = ta2020.TableFromExcel.procSingleExcelGeneral("ex_", ex.src, ex.sheet, ex.dest, session.conn)
-          model.entities.Excelsheet(None,ex.src,ex.sheet,ex.dest,cols,rows)
+          model.entities.Excelsheet(None,ex.src,ex.sheet,ex.dest,cols,rows,now,now)
         }
         IO.executeDBIOSeq(Excelsheet.insertAction(sheets))
       } finally {
@@ -59,13 +61,9 @@ object Starter {
       }
 
     } else if (args.contains("site")){
-      import slick.jdbc.PostgresProfile.api._
-      IO.executeDBIOSeq(Excelsheet.selectAction)
-
-
-      //val data: Array[Array[String]] = ta2020.TableFromExcel.procSingleExcelGeneral("ta2020_", fs.head,null).asScala.head.getData
-      //val filtered = data.filter(l => l.take(4).map(_.trim.length).sum > 0)
-      //helper.writeUTF8File(Config.outputdir + "index.html", html.index(filtered, config).toString())
+      import scala.concurrent.ExecutionContext.Implicits.global
+      val meldungen:Seq[Meldungen] = IO.executeDBIOQuery(Meldungen.selectAction)
+      helper.writeUTF8File(Config.outputdir + "index.html", html.index(meldungen, config).toString())
     } else {}
   }
 }

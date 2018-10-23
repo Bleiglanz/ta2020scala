@@ -5,8 +5,9 @@ package object model {
     def name:String
     def fields:List[DBField]
     def caseclassname:String = name.capitalize
+    def htmlheader:String
   }
-  final case class DBTable(name:String,fields:List[DBField]) extends DBTableTrait
+  final case class DBTable(name:String, fields:List[DBField], htmlheader:String = "") extends DBTableTrait
 
   sealed trait DBField{
     def name:String
@@ -26,8 +27,7 @@ package object model {
     override def sca:String = "Int"
   }
 
-  private def ifnull(nullable:Boolean):String = {
-    if(nullable) "" else "NOT NULL"
+  final case class DBBoolean(name:String, nullable:Boolean=false) extends DBField{
+    override def sca:String = "Boolean"
   }
-
 }

@@ -23,14 +23,22 @@ import com.typesafe.config.{Config=>TypesafeConfig, ConfigFactory}
 import collection.JavaConverters._
 import slick.jdbc.PostgresProfile.api._
 
+
+private object ExcelImport {
+  def apply(c:TypesafeConfig):ExcelImport = ExcelImport(c.getString("file"),c.getString("sheet"),c.getString("dest"))
+}
+
+case class ExcelImport(src:String, sheet:String, dest:String)
+
 trait Configuration{
   def db:Database
-  def inputdirs:List[String]
-  def inputfiles:List[String]
+  def scandirs:List[String]
+  def scanfiles:List[String]
   def outputdir:String
   def htmltitle:String
   def infosystemTa:String
   def uilinks:List[(String,String)]
+  def excel2db:List[ExcelImport]
   def uihome:String
 }
 
@@ -44,9 +52,9 @@ case object Config extends Configuration {
 
   val db:Database = Database.forConfig("ta2020.db")
 
-  val inputdirs:List[String] = config.getStringList("ta2020.inputdirs").asScala.toList
+  val scandirs:List[String] = config.getStringList("ta2020.scandirs").asScala.toList
 
-  val inputfiles:List[String] = config.getStringList("ta2020.inputfiles").asScala.toList
+  val scanfiles:List[String] = config.getStringList("ta2020.scanfiles").asScala.toList
 
   val outputdir:String = config.getString("ta2020.outputdir")
 
@@ -59,12 +67,6 @@ case object Config extends Configuration {
   val excel2db:List[ExcelImport] = config.getObjectList("ta2020.excel.imports").asScala.toList.map(c=>ExcelImport(c.toConfig))
 
   val uihome:String = config.getString("ta2020.ui.home")
-
-  private object ExcelImport {
-    def apply(c:TypesafeConfig):ExcelImport = ExcelImport(c.getString("file"),c.getString("sheet"),c.getString("dest"))
-  }
-
-  case class ExcelImport(src:String, sheet:String, dest:String)
 }
 
 

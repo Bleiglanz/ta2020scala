@@ -1,4 +1,4 @@
-@(data:Array[Array[String]],config:ta2020.Configuration)
+@(meldungen:Seq[model.entities.Meldungen], config:ta2020.Configuration)
 
 <html lang="en">
     <head>
@@ -146,28 +146,39 @@
                             </button>
                         </div>
                     </div>
-                    @html.content(data,config)
+                    @html.meldungen(meldungen,config)
                 </main>
             </div>
         </div>
         <script>
-                $(document).ready(function() {
+                var ready = $(document).ready(function() {
+                    
                     var table = $('#maintable').DataTable();
                     //$('#maintable tbody').on('click', 'tr', function () {var data = table.row( this ).data();
                     // alert( 'You clicked on '+data[0]+'\'s row' );
                     //} );
 
-                    table.page.len(100).draw();
+                    table.page.len(20).draw();
+
 
                     $('#ta2020clear').on( 'click', function () {
                         console.log('show all items');
-                        table.page.len( -1).draw();
+                        table.page.len( 20).draw();
+                        table.search('',true,true).draw();
+                        $('#ta2020search').val('');
                     } );
 
+                    $('#ta2020search').on('keyup click',function(){
+                        table.search($('#ta2020search').val(), true, true).draw();
+                    });
                 } );
+
                 $('#maintable').dataTable( {
-                    "lengthMenu":[ [-1, 1000, 500, 100, 50, 25], ["all",1000, 500, 100, 50, 25] ]
-                } );
+                    "dom" : '<"top"i>rt<"bottom"flp><"clear">',
+                    "lengthMenu":[ [-1, 1000, 500, 100, 50, 25, 20], ["all",1000, 500, 100, 50, 25, 20] ]
+                });
+
+
         </script>
     </body>
 </html>
