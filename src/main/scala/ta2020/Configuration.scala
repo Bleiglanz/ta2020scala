@@ -28,7 +28,7 @@ private object ExcelImport {
   def apply(c:TypesafeConfig):ExcelImport = ExcelImport(c.getString("file"),c.getString("sheet"),c.getString("dest"))
 }
 
-case class ExcelImport(src:String, sheet:String, dest:String)
+final case class ExcelImport(src:String, sheet:String, dest:String)
 
 trait Configuration{
   def db:Database

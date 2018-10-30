@@ -1,16 +1,17 @@
 @(contentMap:tasks.GenerateWebsite.ContentMap, config:ta2020.Configuration)
 <div class="">
-    <h1>Dokumente aus Contentsmap</h1>
     <table id="maintable" class="table table-sm table-striped table-bordered">
         <thead>
             <tr>
-                <th>PATH</th>
+                <th>DOC</th>
             </tr>
         </thead>
         <tbody>
-            @for(line<-contentMap.documents) {
+            @for(doc<-contentMap.documents) {
                 <tr>
-                    <td>@{line.fullpath}</td>
+                    <td>
+                        <a class="nav-link" href="@doc.fullpath" target="_blank">@{doc.name}<span class="sr-only">@{doc.name}</span></a>
+                    </td>
                 </tr>
             }
         </tbody>

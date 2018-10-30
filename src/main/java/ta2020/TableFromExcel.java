@@ -68,7 +68,11 @@ public class TableFromExcel {
                 }
             }
         }
-        return null!=tabelle ? new scala.Tuple2<>(tabelle.spalten, tabelle.zeilen) : new scala.Tuple2<>(0,0);
+        if (null != tabelle) {
+            return new scala.Tuple2<>(tabelle.spalten, tabelle.zeilen);
+        } else {
+            return new scala.Tuple2<>(0, 0);
+        }
     }
 
     public String getName() {
@@ -79,9 +83,9 @@ public class TableFromExcel {
 
     private final FormulaEvaluator evaluator;
 
-    private int zeilen;
+    private final int zeilen;
 
-    private int spalten;
+    private final int spalten;
 
     private final String[][] data;
 
@@ -89,7 +93,7 @@ public class TableFromExcel {
 
     private final int[] columnWidth;
 
-    public String[][] getData() {
+    private String[][] getData() {
         return data;
     }
 

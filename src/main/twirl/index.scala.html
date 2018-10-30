@@ -1,10 +1,10 @@
-@(contentMap:tasks.GenerateWebsite.ContentMap, config:ta2020.Configuration)
+@(contentMap:tasks.GenerateWebsite.ContentMap, current:String, navi:List[tasks.Navigation], config:ta2020.Configuration)
 
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" documents="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <meta http-equiv="documents-type" documents="text/html; charset=UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta http-equiv="documents-type" content="text/html; charset=UTF-8">
         <title>@config.htmltitle</title>
 
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
@@ -131,11 +131,11 @@
         <div class="container-fluid">
             <div class="row">
                 <nav class="col-md-1 d-none d-md-block bg-light sidebar">
-                @html.sidebar(config)
+                @html.sidebar(navi, current, config)
                 </nav>
                 <main role="main" class="col-md-10 ml-sm-auto col-lg-11 px-4"><div class="chartjs-size-monitor" style="position: absolute; left: 0px; top: 0px; right: 0px; bottom: 0px; overflow: hidden; pointer-events: none; visibility: hidden; z-index: -1;"><div class="chartjs-size-monitor-expand" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;"><div style="position:absolute;width:1000000px;height:1000000px;left:0;top:0"></div></div><div class="chartjs-size-monitor-shrink" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;"><div style="position:absolute;width:200%;height:200%;left:0; top:0"></div></div></div>
-                    <div class="d-flex justify-documents-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                        <h1>@config.htmltitle</h1>
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1>@current @config.htmltitle</h1>
                         <div class="btn-toolbar mb-2 mb-md-0">
                             <div class="btn-group mr-2">
                                 <button class="btn btn-sm btn-outline-secondary" id="ta2020clear">Clear</button>
@@ -146,12 +146,10 @@
                             </button>
                         </div>
                     </div>
-                    @if(contentMap.meldungen.nonEmpty){
-                        @html.meldungen(contentMap, config)
-                    }
-                    @if(contentMap.documents.nonEmpty){
-                        @html.documents(contentMap, config)
-                    }
+
+                    @if(contentMap.meldungen.nonEmpty){@html.meldungen(contentMap, config)}
+                    @if(contentMap.documents.nonEmpty){@html.documents(contentMap, config)}
+
                 </main>
             </div>
         </div>

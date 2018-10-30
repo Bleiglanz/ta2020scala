@@ -1,10 +1,19 @@
-@(config:ta2020.Configuration)
+@(navi:List[tasks.Navigation],  current:String, config:ta2020.Configuration)
 <div class="sidebar-sticky">
     <ul class="nav flex-column">
+    @for(n<-navi){
+      <li class="nav-item">
+      @if(current==n.name){
+        <a class="nav-link active" href="@n.url">@{n.name}<span class="sr-only">@{n.name}</span></a>
+      }else{
+        <a class="nav-link " href="@n.url">@{n.name}<span class="sr-only">@{n.name}</span></a>
+      }
+      </li>
+    }
     @for(e<-config.uilinks){
       <li class="nav-item">
-        <a class="nav-link " href="@e._2"><!-- class: active missing -->
-            @e._1 <span class="sr-only">(current)</span>
+        <a class="nav-link " href="@e._2" target="_blank">
+            @e._1 <span class="sr-only">(@{e._1}</span>
         </a>
       </li>
     }

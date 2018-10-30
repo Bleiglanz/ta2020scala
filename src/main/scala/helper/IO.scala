@@ -5,9 +5,9 @@
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,7 @@ import java.time.Instant
 
 import model.entities.Document
 import slick.dbio.DBIOAction
-import slick.dbio.Effect.Read
+import java.io.PrintWriter
 
 import scala.annotation.tailrec
 import slick.jdbc.PostgresProfile.api._
@@ -30,6 +30,13 @@ import scala.concurrent.duration._
 
 object IO {
 
+  def writeUTF8File(fname: String, content: String): Unit = {
+    val pw = new PrintWriter(new File(fname), "UTF-8")
+    pw.print(content)
+    pw.close()
+  }
+
+  val isExcel:String => Boolean = List("xls", "xlsm", "xlsx").contains(_)
 
   private def fileAllowed(file: File): Boolean = Option(file) match {
     case None => false
@@ -68,8 +75,14 @@ object IO {
   def executeDBPlain(postcreatesql: List[String])(implicit db:Database) : Unit = {
     postcreatesql foreach {
       cmd => {
-        val conn = db.source.createConnection()
-        //TODO execute the sql
+        try {
+          val conn = db.source.createConnection()
+          conn.prepareStatement(cmd).execute()
+          print(s"execute $cmd \n")
+          conn.close()
+        } catch {
+          case e:Throwable => e.printStackTrace()
+        }
       }
     }
   }
