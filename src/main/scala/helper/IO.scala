@@ -30,6 +30,7 @@ import scala.concurrent.duration._
 
 object IO {
 
+
   private def fileAllowed(file: File): Boolean = Option(file) match {
     case None => false
     case Some(f) => f.exists && f.isFile
@@ -63,4 +64,16 @@ object IO {
     val f: Future[Seq[T]] = db.run(actions)
     Await.result(f, timeout)
   }
+
+  def executeDBPlain(postcreatesql: List[String])(implicit db:Database) : Unit = {
+    postcreatesql foreach {
+      cmd => {
+        val conn = db.source.createConnection()
+        //TODO execute the sql
+      }
+    }
+  }
+
+
+
 }

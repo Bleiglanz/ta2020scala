@@ -13,18 +13,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import tasks.{GenerateDatabaseCode, GenerateWebsite, ImportData, TaskTrait}
+package tasks
 
-object Starter {
-
-  private val tasks:Map[String,TaskTrait] = Map("gen"->GenerateDatabaseCode,"site"->GenerateWebsite,"import"->ImportData)
-
-  def main(args: Array[String]): Unit = {
-    args foreach { s =>
-      val t:TaskTrait = tasks(s)
-      print(s"\nStart ${t.info} ...")
-      t.run()
-      print(s"...${t.info} done.\n")
+case object GenerateDatabaseCode extends TaskTrait {
+  val info = "generating source files"
+  override def run(): Unit = {
+    for (table <- model.Schema.tables) {
+      val code = txt.schema_slick(table).toString()
+      helper.writeUTF8File(fname = "src/main/scala/model/entities/" + table.caseclassname + ".scala", code)
     }
   }
 }

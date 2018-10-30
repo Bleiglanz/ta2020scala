@@ -40,6 +40,7 @@ trait Configuration{
   def uilinks:List[(String,String)]
   def excel2db:List[ExcelImport]
   def uihome:String
+  def postcreatesql:List[String]
 }
 
 case object Config extends Configuration {
@@ -67,6 +68,9 @@ case object Config extends Configuration {
   val excel2db:List[ExcelImport] = config.getObjectList("ta2020.excel.imports").asScala.toList.map(c=>ExcelImport(c.toConfig))
 
   val uihome:String = config.getString("ta2020.ui.home")
+
+  val postcreatesql:List[String] = config.getStringList("ta2020.postcreatesql").asScala.toList
+
 }
 
 

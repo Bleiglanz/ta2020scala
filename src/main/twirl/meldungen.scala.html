@@ -1,5 +1,6 @@
-@(meldungen:Seq[model.entities.Meldungen],config:ta2020.Configuration)
+@(contentMap:tasks.GenerateWebsite.ContentMap, config:ta2020.Configuration)
 <div class="">
+    <h1>Meldungen aus Contentsmap</h1>
    <table id="maintable" class="table table-sm table-striped table-bordered">
      <thead>
        <tr>
@@ -9,13 +10,13 @@
        </tr>
      </thead>
      <tbody>
-     @for(line<-meldungen) {
+     @for(line<-contentMap.meldungen) {
          <tr>
              <td><a href="@{config.infosystemTa + "System "+line.tanr.take(4) + "/TA." + line.tanr.take(4) + "-" + line.tanr.slice(5,8) }" target="_blank">
-             @{if(line.tanr.isEmpty) ??? else line.tanr }</a>&nbsp;
+             @{if(line.tanr.isEmpty) "missing" else line.tanr }</a>&nbsp;
              </td>
              <td>@{line.shorttext}&nbsp;</td>
-             <td>@{line.longtext}</td>
+             <td>@{line.longtext}&nbsp;</td>
          </tr>
      }
      </tbody>

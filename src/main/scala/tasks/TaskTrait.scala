@@ -13,18 +13,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import tasks.{GenerateDatabaseCode, GenerateWebsite, ImportData, TaskTrait}
+package tasks
 
-object Starter {
-
-  private val tasks:Map[String,TaskTrait] = Map("gen"->GenerateDatabaseCode,"site"->GenerateWebsite,"import"->ImportData)
-
-  def main(args: Array[String]): Unit = {
-    args foreach { s =>
-      val t:TaskTrait = tasks(s)
-      print(s"\nStart ${t.info} ...")
-      t.run()
-      print(s"...${t.info} done.\n")
-    }
-  }
+trait TaskTrait {
+  def run():Unit
+  val info:String
 }
