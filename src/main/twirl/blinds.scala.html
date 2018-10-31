@@ -1,0 +1,21 @@
+@(p:tasks.Page, config:ta2020.Configuration)
+<div class="">
+    <table id="maintable" class="table table-sm table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>TANR  </th>
+                <th>SYS2  </th>
+                <th>LFDNR </th>
+                <th>NAME  </th>
+            </tr>
+        </thead>
+        <tbody>
+            @for(s<-p.contentMap.blinds) {
+                <tr><td>TA@{s.sysnr + "." + s.grnr}</td>
+                    <td>@{s.sysnr2}&nbsp;</td>
+                    <td>@{s.lfdnr}&nbsp;</td>
+                    <td>@{s.beschreibung}&nbsp;</td></tr>
+            }
+        </tbody>
+    </table>
+</div>

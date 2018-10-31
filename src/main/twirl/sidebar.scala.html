@@ -1,12 +1,12 @@
-@(navi:List[tasks.Navigation],  current:String, config:ta2020.Configuration)
+@(p:tasks.Page, config:ta2020.Configuration)
 <div class="sidebar-sticky">
     <ul class="nav flex-column">
-    @for(n<-navi){
+    @for(n<-List( ("Scope","./index.html"),("Documents","./documents.html"), ("Blinds","./blinds.html"))){
       <li class="nav-item">
-      @if(current==n.name){
-        <a class="nav-link active" href="@n.url">@{n.name}<span class="sr-only">@{n.name}</span></a>
+      @if(p.name==n._1){
+        <a class="nav-link active" href="@n._2">@{n._1}</a>
       }else{
-        <a class="nav-link " href="@n.url">@{n.name}<span class="sr-only">@{n.name}</span></a>
+        <a class="nav-link " href="@n._2">@{n._1}</a>
       }
       </li>
     }

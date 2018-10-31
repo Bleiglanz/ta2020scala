@@ -16,16 +16,23 @@
 package tasks
 
 import helper.IO
-import model.entities.{Document, Meldungen}
+import model.entities.{Document, Meldungen, Steckscheiben}
 import slick.jdbc.PostgresProfile
 import ta2020.Config
 
-case object GenerateWebsite extends TaskTrait {
 
-  trait ContentMap {
-    def meldungen:Seq[Meldungen]=Seq.empty
-    def documents:Seq[Document]=Seq.empty
-  }
+trait ContentMap {
+  def meldungen: Seq[Meldungen] = Seq.empty
+  def documents: Seq[Document] = Seq.empty
+  def blinds: Seq[Steckscheiben] = Seq.empty
+}
+
+
+case class Page(name:String, html:String, contentMap:ContentMap)
+
+case class PageName(name:String, html:String)
+
+case object GenerateWebsite extends TaskTrait {
 
   val info = "generating website"
 
@@ -35,27 +42,30 @@ case object GenerateWebsite extends TaskTrait {
 
     implicit val db: PostgresProfile.api.Database = config.db
 
+    def getMap(pn:PageName):ContentMap = pn.name match {
+      case "Scope" =>     new ContentMap { override def meldungen: Seq[Meldungen] = IO.executeDBIOQuery(Meldungen.selectAction)}
+      case "Documents" => new ContentMap { override def documents: Seq[Document] = IO.executeDBIOQuery(Document.selectAction)}
+      case "Blinds" =>    new ContentMap { override def blinds: Seq[Steckscheiben] = IO.executeDBIOQuery(Steckscheiben.selectAction)}
+    }
 
-
-    val navi:List[Navigation]= List(Navigation("Scope","./index.html"), Navigation("Dokumente","./documents.html"))
-
-    val meldungenMap = new ContentMap {override def meldungen: Seq[Meldungen] = IO.executeDBIOQuery(Meldungen.selectAction)}
-    IO.writeUTF8File(
-      Config.outputdir + "index.html",
-      html.index(meldungenMap, "Scope", navi, config).toString()
-    )
-
-    val documentsMap = new ContentMap { override def documents: Seq[Document] = IO.executeDBIOQuery(Document.selectAction)}
-    IO.writeUTF8File(
-      Config.outputdir + "documents.html",
-      html.index(documentsMap, "Dokumente", navi, config).toString()
-    )
-
+     List(PageName("Scope", "index"),PageName("Documents", "documents"),PageName("Blinds", "blinds")) foreach { pn =>
+      val p:Page = Page(pn.name, pn.html, getMap(pn))
+      print(s"..generate page: ${p.html}\n")
+      IO.writeUTF8File(Config.outputdir + "./" + p.html +".html", html.index(p, config).toString())
+    }
   }
 }
 
-sealed trait NavLink {
-  val name:String
-  val url:String
-}
-final case class Navigation(name:String, url:String) extends NavLink
+
+
+
+
+
+
+
+
+
+
+
+
+
