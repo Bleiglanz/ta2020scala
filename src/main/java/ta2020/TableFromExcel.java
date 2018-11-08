@@ -5,8 +5,11 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.NumberToTextConverter;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -29,7 +32,7 @@ public class TableFromExcel {
         return null == s || 0 == s.trim().length();
     }
 
-    public static scala.Tuple2<Integer,Integer> procSingleExcelGeneral(String prefix, String filename, String sheetname, String desttablename, Connection conn) {
+    public static scala.Tuple2<Integer,Integer> procSingleExcelGeneral(String prefix, String filename, String sheetname, String desttablename, Connection conn, int header) {
         //List<Path> pathsToExcelFiles
         Path p = java.nio.file.Paths.get(filename);
         //System.out.println("Excelfile recognized "+p.toFile().getAbsolutePath());
@@ -55,7 +58,7 @@ public class TableFromExcel {
                 Sheet s = wb.getSheetAt(i);
                 //System.out.println("Excelsheet detected"+s.getSheetName());
                 if (sheetname.equals(s.getSheetName())) {
-                    tabelle = new TableFromExcel(p.toAbsolutePath().getFileName().toString(), s, eval, prefix, desttablename);
+                    tabelle = new TableFromExcel(p, s, eval, prefix, desttablename, header);
                     if (null != tabelle.getData() && tabelle.getData().length > 0) {
                         try {
                             tabelle.createTable(conn);
@@ -68,12 +71,17 @@ public class TableFromExcel {
                 }
             }
         }
+        System.gc();
         if (null != tabelle) {
             return new scala.Tuple2<>(tabelle.spalten, tabelle.zeilen);
         } else {
             return new scala.Tuple2<>(0, 0);
         }
+
     }
+
+
+
 
     public String getName() {
         return name;
@@ -93,17 +101,24 @@ public class TableFromExcel {
 
     private final int[] columnWidth;
 
+    private final int headerline;
+
+    private final Path dateipfad;
+
     private String[][] getData() {
         return data;
     }
 
-    private TableFromExcel(final String pfad, final Sheet sheet, final FormulaEvaluator a_evaluator, String prefix, String desttablename) {
+    private TableFromExcel(final Path datei, final Sheet sheet, final FormulaEvaluator a_evaluator, String prefix, String desttablename, int header) {
+        String pfad = datei.toAbsolutePath().getFileName().toString();
+        this.dateipfad = datei.toAbsolutePath();
         if (null == prefix) prefix = "";
         String tempname = prefix.concat(cleanString(pfad.concat("_").concat(sheet.getSheetName())));
         String tempname2 = ((tempname.length() > 124 ? tempname.substring(0, 124) : tempname).toLowerCase()).replace('-', '_');
         this.name = null != desttablename && desttablename.length() > 0 ? prefix + desttablename : tempname2;
         this.evaluator = a_evaluator;
         this.zeilen = sheet.getPhysicalNumberOfRows();
+        this.headerline = header;
         int max_spalten = 0;
 
         // first run: find number of rows/cols
@@ -132,7 +147,15 @@ public class TableFromExcel {
                     }
                 }
                 this.data[physical_count][this.spalten - 2] = Integer.toString(z + 1);
-                this.data[physical_count][this.spalten - 1] = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.FULL).format(System.currentTimeMillis());
+
+                String datumsangabe = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.FULL).format(System.currentTimeMillis());
+                String dateidatum = null;
+                try{
+                    FileTime fileTime = Files.getLastModifiedTime(dateipfad);
+                    dateidatum = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.FULL).format(fileTime.toMillis());
+                }catch(Exception e){ e.printStackTrace(); }
+                this.data[physical_count][this.spalten - 1] = null!=dateidatum ? dateidatum : datumsangabe;
+
                 physical_count++;
                 morerows = (physical_count < this.zeilen);
             } else {
@@ -161,8 +184,8 @@ public class TableFromExcel {
                 }
                 // maximal width of a column
                 if (this.data[i][j].length() > this.columnWidth[j]) this.columnWidth[j] = this.data[i][j].length();
-                this.columnNames[this.spalten - 2] = "IMPORT_LFDNR";
-                this.columnNames[this.spalten - 1] = "IMPORT_DATUM";
+                this.columnNames[this.spalten - 2] = "IMPORTPK";
+                this.columnNames[this.spalten - 1] = "DATUM";
             }
         //append count to columnName
         for (int j = 0; j < this.spalten; j++) {
@@ -246,9 +269,22 @@ public class TableFromExcel {
         if (0 == this.zeilen) return;
         StringBuilder sql = new StringBuilder();
         sql.append("INSERT INTO \"").append(this.name).append("\" (");
-        for (int s = 0; s < this.spalten; s++) {
-            sql.append(" ").append(this.columnNames[s]).append(" ").append(this.spalten - 1 == s ? "" : ",");
+
+        if(this.headerline < 0){
+            for (int i = 0; i < this.spalten-2; i++) {
+                sql.append(" ").append(cleanString(this.columnNames[i])).append(" ,");
+            }
+        }else{
+            for (int i = 0; i < this.spalten-2; i++) {
+                sql.append(" \"").append(cleanString(this.data[headerline][i])).append("\", ");
+            }
         }
+        for (int i = this.spalten-2; i<this.spalten; i++) {
+            sql.append(" ").append(cleanString(this.columnNames[i])).append(" ").append(this.spalten - 1 == i ? "" : ",");
+        }
+//        for (int s = 0; s < this.spalten; s++) {
+//            sql.append(" ").append(this.columnNames[s]).append(" ").append(this.spalten - 1 == s ? "" : ",");
+//      }
         sql.append(") VALUES (");
         for (int s = 0; s < this.spalten; s++) {
             sql.append("?").append(this.spalten - 1 == s ? "" : ",");
@@ -256,7 +292,8 @@ public class TableFromExcel {
         sql.append(");");
         int numrows = 0;
         PreparedStatement ps = conn.prepareStatement(sql.toString());
-        for (int z = 0; z < this.zeilen; z++) {
+        int startline = this.headerline >=0 ? this.headerline+1 : 0;
+        for (int z = startline; z < this.zeilen; z++) {
             for (int s = 0; s < this.spalten; s++) {
                 ps.setString(s + 1, this.data[z][s]);
             }
@@ -268,6 +305,8 @@ public class TableFromExcel {
     }
 
     private void createTable(java.sql.Connection conn) throws SQLException {
+        if(this.headerline >= this.zeilen) throw new RuntimeException("headerline required, but not enough rows ");
+
         final String newline = System.getProperty("line.separator");
         if (this.name.length() > 60) {
             System.out.print("WARNING - NAME MIGHT BE TOO LONG" + this.name + newline);
@@ -282,9 +321,19 @@ public class TableFromExcel {
         // create new table
         sql = new StringBuilder();
         sql.append("create table \"").append(this.name).append("\"(\nid bigserial not null primary key");
-        for (int i = 0; i < this.spalten; i++) {
+        if(this.headerline < 0){
+            for (int i = 0; i < this.spalten-2; i++) {
+                sql.append(",\n ").append(cleanString(this.columnNames[i])).append(" varchar(").append(this.columnWidth[i]).append(") not null");
+            }
+        }else{
+            for (int i = 0; i < this.spalten-2; i++) {
+                sql.append(",\n \"").append(cleanString(this.data[headerline][i])).append("\" varchar(").append(this.columnWidth[i]).append(") not null");
+            }
+        }
+        for (int i = this.spalten-2; i<this.spalten; i++) {
             sql.append(",\n ").append(cleanString(this.columnNames[i])).append(" varchar(").append(this.columnWidth[i]).append(") not null");
         }
+
         cmd = sql.append(")").toString();
         conn.createStatement().execute(cmd);
     }

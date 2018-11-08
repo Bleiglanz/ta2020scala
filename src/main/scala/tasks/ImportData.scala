@@ -44,7 +44,7 @@ case object ImportData extends TaskTrait {
     try {
       val sheets = config.excel2db.map {
         ex:ExcelImport =>
-          val (cols,rows) = ta2020.TableFromExcel.procSingleExcelGeneral("ex_", ex.src, ex.sheet, ex.dest, session.conn)
+          val (cols,rows) = ta2020.TableFromExcel.procSingleExcelGeneral("ex_", ex.src, ex.sheet, ex.dest, session.conn, ex.header)
           model.entities.Excelsheet(None,ex.src,ex.sheet,ex.dest,cols,rows,now,now)
       }
       IO.executeDBIOSeq(Excelsheet.insertAction(sheets))

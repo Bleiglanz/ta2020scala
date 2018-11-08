@@ -25,10 +25,10 @@ import slick.jdbc.PostgresProfile.api._
 
 
 private object ExcelImport {
-  def apply(c:TypesafeConfig):ExcelImport = ExcelImport(c.getString("file"),c.getString("sheet"),c.getString("dest"))
+  def apply(c:TypesafeConfig):ExcelImport = ExcelImport(c.getString("file"),c.getString("sheet"),c.getString("dest"),c.getInt("header"))
 }
 
-final case class ExcelImport(src:String, sheet:String, dest:String)
+final case class ExcelImport(src:String, sheet:String, dest:String, header:Int)
 
 trait Configuration{
   def db:Database
