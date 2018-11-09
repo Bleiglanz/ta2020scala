@@ -115,7 +115,7 @@ public class TableFromExcel {
         if (null == prefix) prefix = "";
         String tempname = prefix.concat(cleanString(pfad.concat("_").concat(sheet.getSheetName())));
         String tempname2 = ((tempname.length() > 124 ? tempname.substring(0, 124) : tempname).toLowerCase()).replace('-', '_');
-        this.name = null != desttablename && desttablename.length() > 0 ? prefix + desttablename : tempname2;
+        this.name = (null != desttablename && desttablename.length() > 0 ? prefix + desttablename : tempname2).toLowerCase();
         this.evaluator = a_evaluator;
         this.zeilen = sheet.getPhysicalNumberOfRows();
         this.headerline = header;
@@ -175,7 +175,7 @@ public class TableFromExcel {
                 // the first filled cell is the column title
                 if (emptyString(this.columnNames[j]))
                     if (!emptyString(this.data[i][j]))
-                        this.columnNames[j] = "S" + j;  //+"_" + ArbeitenImporter.cleanString(this.data[i][j]);
+                        this.columnNames[j] = "s" + j;  //+"_" + ArbeitenImporter.cleanString(this.data[i][j]);
                 // replace null by empty string and count non empty stuff
                 if (emptyString(this.data[i][j])) {
                     this.data[i][j] = "";
@@ -184,8 +184,8 @@ public class TableFromExcel {
                 }
                 // maximal width of a column
                 if (this.data[i][j].length() > this.columnWidth[j]) this.columnWidth[j] = this.data[i][j].length();
-                this.columnNames[this.spalten - 2] = "IMPORTPK";
-                this.columnNames[this.spalten - 1] = "DATUM";
+                this.columnNames[this.spalten - 2] = "anre_import_lfdnr";
+                this.columnNames[this.spalten - 1] = "anre_file_datum";
             }
         //append count to columnName
         for (int j = 0; j < this.spalten; j++) {
@@ -268,15 +268,15 @@ public class TableFromExcel {
     private void insertRows(java.sql.Connection conn) throws SQLException {
         if (0 == this.zeilen) return;
         StringBuilder sql = new StringBuilder();
-        sql.append("INSERT INTO \"").append(this.name).append("\" (");
+        sql.append("INSERT INTO \"").append(this.name.toLowerCase()).append("\" (");
 
         if(this.headerline < 0){
             for (int i = 0; i < this.spalten-2; i++) {
-                sql.append(" ").append(cleanString(this.columnNames[i])).append(" ,");
+                sql.append(" ").append(cleanString(this.columnNames[i].toLowerCase())).append(" ,");
             }
         }else{
             for (int i = 0; i < this.spalten-2; i++) {
-                sql.append(" \"").append(cleanString(this.data[headerline][i])).append("\", ");
+                sql.append(" \"").append(cleanString(this.data[headerline][i].toLowerCase()).toLowerCase()).append("\", ");
             }
         }
         for (int i = this.spalten-2; i<this.spalten; i++) {
@@ -305,7 +305,16 @@ public class TableFromExcel {
     }
 
     private void createTable(java.sql.Connection conn) throws SQLException {
-        if(this.headerline >= this.zeilen) throw new RuntimeException("headerline required, but not enough rows ");
+
+        if(this.headerline >= this.zeilen){
+            throw new RuntimeException("headerline required, but not enough rows ");
+        }
+        if(this.headerline>=0){
+        for(int i=0; i<this.spalten-2;i++){
+            if(0==this.data[headerline][i].length()) this.data[headerline][i]=this.columnNames[i];
+            this.data[headerline][i]=this.data[headerline][i].toLowerCase();
+        }}
+
 
         final String newline = System.getProperty("line.separator");
         if (this.name.length() > 60) {
@@ -314,27 +323,27 @@ public class TableFromExcel {
         StringBuilder sql;
 
         sql = new StringBuilder();
-        String cmd = sql.append("DROP TABLE IF EXISTS \"").append(this.name).append("\"\n").toString();
+        String cmd = sql.append("DROP TABLE IF EXISTS \"").append(this.name.toLowerCase()).append("\"\n").toString();
         conn.createStatement().execute(cmd);
 
 
         // create new table
         sql = new StringBuilder();
-        sql.append("create table \"").append(this.name).append("\"(\nid bigserial not null primary key");
+        sql.append("create table \"").append(this.name.toLowerCase()).append("\"(\nanre_pk_id bigserial not null primary key");
         if(this.headerline < 0){
             for (int i = 0; i < this.spalten-2; i++) {
                 sql.append(",\n ").append(cleanString(this.columnNames[i])).append(" varchar(").append(this.columnWidth[i]).append(") not null");
             }
         }else{
             for (int i = 0; i < this.spalten-2; i++) {
-                sql.append(",\n \"").append(cleanString(this.data[headerline][i])).append("\" varchar(").append(this.columnWidth[i]).append(") not null");
+                sql.append(",\n \"").append(cleanString(this.data[headerline][i].toLowerCase())).append("\" varchar(").append(this.columnWidth[i]).append(") not null");
             }
         }
         for (int i = this.spalten-2; i<this.spalten; i++) {
             sql.append(",\n ").append(cleanString(this.columnNames[i])).append(" varchar(").append(this.columnWidth[i]).append(") not null");
         }
 
-        cmd = sql.append(")").toString();
+        cmd = sql.append(")").toString().toLowerCase();
         conn.createStatement().execute(cmd);
     }
 }

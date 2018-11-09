@@ -1,1 +1,1 @@
--J-Dconfig.file=application.conf
+-J-Xmx1600m -J-Dconfig.file=application.conf
