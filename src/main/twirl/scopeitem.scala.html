@@ -8,11 +8,12 @@
             </tr>
         </thead>
         <tbody>
-            @for((k,v)<-p.contentMap.scopeitem) {
+            @for(map<-p.contentMap.scopeitem){
+            @for((k,v)<-map) {
                 <tr><td>@k</td>
                     <td>@v</td>
                 </tr>
-            }
+            }}
         </tbody>
     </table>
 </div>

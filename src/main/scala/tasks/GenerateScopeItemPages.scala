@@ -32,16 +32,20 @@ object GenerateScopeItemPages extends TaskTrait {
 
       val row = helper.JDBC.selectRowtoColumnMaps(s"select * from ex_meldungen where s2='${sc.tanr}'")(conn)
 
-      val doc = helper.JDBC.selectRowtoColumnMaps(s"select * from document where tanr ='${sc.tanr}'")(conn)
+      val doc = helper.JDBC.selectRowtoColumnMaps(s"select fullpath as dokument from document where tanr ='${sc.tanr}'")(conn)
 
-      val p:Page = Page("ScopeItem " + sc.tanr,"scope/ta" + sc.tanr,new ContentMap {override def scopeitem: Map[String, String] = row++doc})
+      val p:Page = Page("ScopeItem " + sc.tanr,"scope/ta" + sc.tanr,
+        new ContentMap {
+          override def scopeitem: List[Map[String, String]] = List(row,doc)
+          override def baselink: String = "../"
+          override def pagination : Int = -1
+        })
 
       IO.writeUTF8File(Config.outputdir + "" + p.html + ".html", html.index(p, config).toString())
       print(p.html)
       print('\n')
-      conn.close()
     }
-
+    conn.close()
   }
   override val info: String = "generate pages for scope items"
 }

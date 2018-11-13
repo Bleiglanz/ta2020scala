@@ -1,18 +1,18 @@
 @(p:tasks.Page, config:ta2020.Configuration)
 <div class="sidebar-sticky">
     <ul class="nav flex-column">
-    @for(n<-List( ("Scope","./index.html"),("Documents","./documents.html"), ("Blinds","./blinds.html"))){
+    @for(n<-List( ("Scope","index.html"),("Documents","documents.html"), ("Blinds","blinds.html"))){
       <li class="nav-item">
       @if(p.name==n._1){
-        <a class="nav-link active" href="@n._2">@{n._1}</a>
+        <a class="nav-link active" href="@p.contentMap.baselink@n._2">@{n._1}</a>
       }else{
-        <a class="nav-link " href="@n._2">@{n._1}</a>
+        <a class="nav-link " href="@p.contentMap.baselink@n._2">@{n._1}</a>
       }
       </li>
     }
     @for(e<-config.uilinks){
       <li class="nav-item">
-        <a class="nav-link " href="@e._2" target="_blank">
+        <a class="nav-link " href="@p.contentMap.baselink@e._2" target="_blank">
             @e._1 <span class="sr-only">(@{e._1}</span>
         </a>
       </li>

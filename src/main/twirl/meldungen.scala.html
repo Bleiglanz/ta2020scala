@@ -11,7 +11,7 @@
      <tbody>
      @for(line<-p.contentMap.meldungen) {
          <tr>
-             <td><a href="@{"scope/ta"+line.tanr + ".html"}" target="_blank">
+             <td><a href="@{"scope/ta"+line.tanr + ".html"}">
              @{if(line.tanr.isEmpty) "missing" else line.tanr }</a></td>
              <td>@{line.shorttext}</td>
              <td>@{line.longtext}</td>

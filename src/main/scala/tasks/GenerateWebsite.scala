@@ -25,7 +25,9 @@ trait ContentMap {
   def meldungen: Seq[Meldungen] = Seq.empty
   def documents: Seq[Document] = Seq.empty
   def blinds: Seq[Steckscheiben] = Seq.empty
-  def scopeitem : Map[String,String] = Map.empty
+  def scopeitem : List[Map[String,String]] = Nil
+  def baselink : String = "./"
+  def pagination : Int = 20
 }
 
 

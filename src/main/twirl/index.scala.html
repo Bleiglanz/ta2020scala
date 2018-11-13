@@ -158,12 +158,11 @@
                     // alert( 'You clicked on '+data[0]+'\'s row' );
                     //} );
 
-                    table.page.len(20).draw();
-
+                    table.page.len(@p.contentMap.pagination).draw();
 
                     $('#ta2020clear').on( 'click', function () {
                         console.log('show all items');
-                        table.page.len( 20).draw();
+                        table.page.len( @p.contentMap.pagination).draw();
                         table.search('',true,true).draw();
                         $('#ta2020search').val('');
                     } );
