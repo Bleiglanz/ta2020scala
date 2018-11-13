@@ -16,20 +16,22 @@
 package helper
 import java.sql.{Connection, ResultSet}
 
-import scala.collection.mutable.ListBuffer
-
 object JDBC {
 
   def selectRowtoColumnMaps(sql:String)(implicit conn: Connection):Map[String,String] = {
     if(conn.isClosed) Map(""->"") else {
       val rs:ResultSet =conn.prepareStatement(sql).executeQuery()
       val meta = rs.getMetaData
-      val res = new ListBuffer[(String,String)]
+      val result:scala.collection.mutable.Map[String,String] =scala.collection.mutable.Map.empty
+      var rowcount=0
       while(rs.next()){
-        for(i <- 1 to meta.getColumnCount)
-        { res += (meta.getColumnLabel(i).toUpperCase()->rs.getString(i))}
+        rowcount = rowcount + 1
+        (1 to meta.getColumnCount) foreach { i =>
+           val key = meta.getColumnLabel(i).toUpperCase()
+           val betterkey = if(result.contains(key)) s"""${key}${rowcount}""" else key
+           result(betterkey)=rs.getString(i) }
       }
-      res.toMap
+      result.toMap
     }
   }
 

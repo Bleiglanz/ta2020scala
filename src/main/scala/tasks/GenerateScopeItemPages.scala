@@ -18,25 +18,36 @@ package tasks
 import java.sql.Connection
 
 import helper.IO
-import model.entities.Meldungen
+import model.entities.{Document, Meldungen}
 import slick.jdbc.PostgresProfile
 import ta2020.Config
+import slick.jdbc.PostgresProfile.api._
+import slick.lifted.ProvenShape
+import slick.sql.SqlProfile.ColumnOption.SqlType
+import java.sql.Timestamp
 
 object GenerateScopeItemPages extends TaskTrait {
   private val config = Config
   implicit val db: PostgresProfile.api.Database = config.db
 
   override def run(): Unit = {
+
     val conn: Connection = db.source.createConnection()
+
     IO.executeDBIOQuery(Meldungen.selectAction) foreach { sc=>
 
-      val row = helper.JDBC.selectRowtoColumnMaps(s"""select * from ex_meldungen where turnaround_nr_='${sc.tanr}'""")(conn)
+      val row = helper.JDBC.selectRowtoColumnMaps(s"""select * from ex_meldungen where s2='${sc.tanr}'""")(conn) //TODO: s2 durch spanltennamen ersetzen
 
-      val doc = helper.JDBC.selectRowtoColumnMaps(s"""select fullpath as dokument from document where tanr ='${sc.tanr}'""")(conn)
+      val doc = helper.JDBC.selectRowtoColumnMaps(s"""select fullpath as datei from document where tanr ='${sc.tanr}'""")(conn)
+
+      val docliste = IO.executeDBIOQuery(Document.all.filter(_.tanr === sc.tanr).result)
+
+      val docstring= docliste.map(
+        f=>s"""<li><a href="${f.fullpath}" target="_blank">${f.name}</>""").mkString("<ul>","\n","</ul>")
 
       val p:Page = Page("ScopeItem " + sc.tanr,"scope/ta" + sc.tanr,
         new ContentMap {
-          override def scopeitem: List[Map[String, String]] = List(row,doc)
+          override def scopeitem: List[Map[String, String]] = List(row,Map("DATEIEN"->docstring))
           override def baselink: String = "../"
           override def pagination : Int = -1
         })
