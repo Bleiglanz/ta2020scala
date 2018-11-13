@@ -30,9 +30,9 @@ object GenerateScopeItemPages extends TaskTrait {
     val conn: Connection = db.source.createConnection()
     IO.executeDBIOQuery(Meldungen.selectAction) foreach { sc=>
 
-      val row = helper.JDBC.selectRowtoColumnMaps(s"select * from ex_meldungen where s2='${sc.tanr}'")(conn)
+      val row = helper.JDBC.selectRowtoColumnMaps(s"""select * from ex_meldungen where turnaround_nr_='${sc.tanr}'""")(conn)
 
-      val doc = helper.JDBC.selectRowtoColumnMaps(s"select fullpath as dokument from document where tanr ='${sc.tanr}'")(conn)
+      val doc = helper.JDBC.selectRowtoColumnMaps(s"""select fullpath as dokument from document where tanr ='${sc.tanr}'""")(conn)
 
       val p:Page = Page("ScopeItem " + sc.tanr,"scope/ta" + sc.tanr,
         new ContentMap {
