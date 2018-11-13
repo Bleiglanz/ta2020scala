@@ -43,4 +43,9 @@ package object model {
   final case class DBBoolean(name:String, nullable:Boolean=false) extends DBField{
     override def sca:String = "Boolean"
   }
+
+  final case class DBTimestamp(name:String, nullable:Boolean=false) extends DBField{
+    override def sca:String = "Timestamp"
+  }
+
 }

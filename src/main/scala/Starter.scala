@@ -13,19 +13,31 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import tasks.{GenerateDatabaseCode, GenerateWebsite, ImportData, TaskTrait}
+import tasks.{GenerateDatabaseCode, GenerateWebsite, ImportData, GenerateScopeItemPages, TaskTrait}
 
 object Starter {
 
-  private val tasks:Map[String,TaskTrait] = Map("gen"->GenerateDatabaseCode,"site"->GenerateWebsite,"import"->ImportData)
+  private val tasks:Map[String,TaskTrait] =
+    Map("gen"->GenerateDatabaseCode,
+        "site"->GenerateWebsite,
+         "import"->ImportData,
+         "scope"->GenerateScopeItemPages)
 
   def main(args: Array[String]): Unit = {
-    args foreach { s =>
-      val t:TaskTrait = tasks(s)
-      print(s"\nStart ${t.info} ...\n")
-      t.run()
-      print(s"...${t.info} done.\n")
+
+    try {
+      args foreach { s =>
+        val t: TaskTrait = tasks(s)
+        print(s"\nStart ${t.info} ...\n")
+        t.run()
+        print(s"...${t.info} done.\n")
+      }
+    } catch {
+      case e: Throwable =>
+        ta2020.Config.db.close()
+        throw new Exception(e)
+    } finally {
+      ta2020.Config.db.close()
     }
-    ta2020.Config.db.close()
   }
 }

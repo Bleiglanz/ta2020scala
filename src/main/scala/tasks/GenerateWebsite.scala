@@ -25,14 +25,15 @@ trait ContentMap {
   def meldungen: Seq[Meldungen] = Seq.empty
   def documents: Seq[Document] = Seq.empty
   def blinds: Seq[Steckscheiben] = Seq.empty
+  def scopeitem : Map[String,String] = Map.empty
 }
 
 
-case class Page(name:String, html:String, contentMap:ContentMap)
+final case class Page(name:String, html:String, contentMap:ContentMap)
 
-case class PageName(name:String, html:String)
+final case class PageName(name:String, html:String)
 
-case object GenerateWebsite extends TaskTrait {
+final case object GenerateWebsite extends TaskTrait {
 
   val info = "generating website"
 
@@ -51,7 +52,7 @@ case object GenerateWebsite extends TaskTrait {
      List(PageName("Scope", "index"),PageName("Documents", "documents"),PageName("Blinds", "blinds")) foreach { pn =>
       val p:Page = Page(pn.name, pn.html, getMap(pn))
       print(s"..generate page: ${p.html}\n")
-      IO.writeUTF8File(Config.outputdir + "./" + p.html +".html", html.index(p, config).toString())
+      IO.writeUTF8File(Config.outputdir + "" + p.html +".html", html.index(p, config).toString())
     }
   }
 }

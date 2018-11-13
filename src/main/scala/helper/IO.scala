@@ -21,6 +21,7 @@ import java.time.Instant
 import model.entities.Document
 import slick.dbio.DBIOAction
 import java.io.PrintWriter
+import java.nio.file.Files
 
 import scala.annotation.tailrec
 import slick.jdbc.PostgresProfile.api._
@@ -31,7 +32,9 @@ import scala.concurrent.duration._
 object IO {
 
   def writeUTF8File(fname: String, content: String): Unit = {
-    val pw = new PrintWriter(new File(fname), "UTF-8")
+    val f:File = new File(fname)
+    f.getParentFile.mkdirs()
+    val pw = new PrintWriter(f, "UTF-8")
     pw.print(content)
     pw.close()
   }
@@ -46,7 +49,16 @@ object IO {
 
     def makedoc(f:File):Document = {
       val name = f.getName
-      Document(None,name,"",f.getAbsolutePath,name.split('.').last,f.length,java.sql.Timestamp.from(Instant.now),java.sql.Timestamp.from(Instant.now))
+      val regex = """([0-9]{4})[.-][0-9]{3}""".r()
+      val tanr:String = regex.findFirstIn(name).getOrElse("").replace('-','.')
+      Document(None,
+               name,
+               "",
+               f.getAbsolutePath,
+               name.split('.').last,f.length,tanr,
+               java.sql.Timestamp.from(Files.getLastModifiedTime(f.toPath).toInstant),
+               java.sql.Timestamp.from(Instant.now),
+               java.sql.Timestamp.from(Instant.now))
     }
 
     @tailrec def scanDirs(dirs: List[File], docs: List[Document]): List[Document] = dirs match {

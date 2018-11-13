@@ -22,7 +22,9 @@ object Schema {
     DBString("doctype"),
     DBString("fullpath"),
     DBString("extension"),
-    DBLong("size")
+    DBLong("size"),
+    DBString("tanr"),
+    DBTimestamp("file_last_modified")
   ))
 
   private val excelsheet = DBTable("excelsheet", List(

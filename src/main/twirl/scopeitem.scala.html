@@ -1,0 +1,18 @@
+@(p:tasks.Page, config:ta2020.Configuration)
+<div class="">
+    <table id="maintable" class="table table-sm table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>ATTRIBUT</th>
+                <th>WERT</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for((k,v)<-p.contentMap.scopeitem) {
+                <tr><td>@k</td>
+                    <td>@v</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
