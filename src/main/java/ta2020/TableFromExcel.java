@@ -111,7 +111,7 @@ public class TableFromExcel {
     }
 
     private TableFromExcel(final Path datei, final Sheet sheet, final FormulaEvaluator a_evaluator, String prefix, String desttablename, int header) {
-        HashSet<String> columnNamesSet = new HashSet<>();
+
         String pfad = datei.toAbsolutePath().getFileName().toString();
         this.dateipfad = datei.toAbsolutePath();
         if (null == prefix) prefix = "";
@@ -195,10 +195,6 @@ public class TableFromExcel {
             //this.columnNames[j] = this.columnNames[j].concat("_").concat(Integer.toString(this.columnNonEmptyCount[j]));
         }
 
-        for (int j=0; j<this.spalten; j++){
-            if(columnNamesSet.contains(this.columnNames[j])) this.columnNames[j]=this.columnNames[j]+"2";
-            columnNamesSet.add(this.columnNames[j]);
-        }
 
     }
 
@@ -317,10 +313,21 @@ public class TableFromExcel {
             throw new RuntimeException("headerline required, but not enough rows ");
         }
         if(this.headerline>=0){
-        for(int i=0; i<this.spalten-2;i++){
-            if(0==this.data[headerline][i].length()) this.data[headerline][i]=this.columnNames[i];
-            this.data[headerline][i]=this.data[headerline][i].toLowerCase();
-        }}
+            for(int i=0; i<this.spalten-2;i++){
+                if(0==this.data[headerline][i].length()) this.data[headerline][i]=this.columnNames[i];
+                this.data[headerline][i]=this.data[headerline][i].toLowerCase();
+            }
+            //
+            // we want no duplicates if we use a header line
+            //
+            HashSet<String> columnNamesSet = new HashSet<>();
+            int duplicatecount=2;
+            for (int j=0; j<this.spalten-2; j++){
+                if(columnNamesSet.contains(this.data[headerline][j])) this.data[headerline][j]=this.data[headerline][j]+String.valueOf(duplicatecount++);
+                columnNamesSet.add(this.data[headerline][j]);
+            }
+
+        }
 
 
         final String newline = System.getProperty("line.separator");
