@@ -14,6 +14,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.text.DateFormat;
+import java.util.HashSet;
 import java.util.Locale;
 
 
@@ -110,6 +111,7 @@ public class TableFromExcel {
     }
 
     private TableFromExcel(final Path datei, final Sheet sheet, final FormulaEvaluator a_evaluator, String prefix, String desttablename, int header) {
+        HashSet<String> columnNamesSet = new HashSet<>();
         String pfad = datei.toAbsolutePath().getFileName().toString();
         this.dateipfad = datei.toAbsolutePath();
         if (null == prefix) prefix = "";
@@ -191,6 +193,11 @@ public class TableFromExcel {
         for (int j = 0; j < this.spalten; j++) {
             if (emptyString(this.columnNames[j])) this.columnNames[j] = "S" + j;
             //this.columnNames[j] = this.columnNames[j].concat("_").concat(Integer.toString(this.columnNonEmptyCount[j]));
+        }
+
+        for (int j=0; j<this.spalten; j++){
+            if(columnNamesSet.contains(this.columnNames[j])) this.columnNames[j]=this.columnNames[j]+"2";
+            columnNamesSet.add(this.columnNames[j]);
         }
 
     }
