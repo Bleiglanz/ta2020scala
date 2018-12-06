@@ -11,7 +11,7 @@
             @for(map<-p.contentMap.scopeitem){
             @for((k,v)<-map if v.nonEmpty) {
                 <tr><td>@k</td>
-                    <td>@v</td>
+                    <td>@{Html(v)}</td>
                 </tr>
             }}
         </tbody>

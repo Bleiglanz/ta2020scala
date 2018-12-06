@@ -36,7 +36,7 @@ object GenerateScopeItemPages extends TaskTrait {
 
     IO.executeDBIOQuery(Meldungen.selectAction) foreach { sc=>
 
-      val row = helper.JDBC.selectRowtoColumnMaps(s"""select * from ex_meldungen where s2='${sc.tanr}'""")(conn) //TODO: s2 durch spanltennamen ersetzen
+      val row = helper.JDBC.selectRowtoColumnMaps(s"""select * from ex_meldungen_prd where turnaround_nr_='${sc.tanr}'""")(conn)
 
       val doc = helper.JDBC.selectRowtoColumnMaps(s"""select fullpath as datei from document where tanr ='${sc.tanr}'""")(conn)
 

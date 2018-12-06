@@ -21,7 +21,8 @@ object Starter {
     Map("gen"->GenerateDatabaseCode,
         "site"->GenerateWebsite,
          "import"->ImportData,
-         "scope"->GenerateScopeItemPages)
+         "scope"->GenerateScopeItemPages
+    )
 
   def main(args: Array[String]): Unit = {
 

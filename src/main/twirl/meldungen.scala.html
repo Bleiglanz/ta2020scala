@@ -3,18 +3,18 @@
    <table id="maintable" class="table table-sm table-striped table-bordered">
      <thead>
        <tr>
+           <th>MELDUNG</th>
            <th>TA.NR</th>
            <th>NAME</th>
-           <th>DESCR</th>
        </tr>
      </thead>
      <tbody>
      @for(line<-p.contentMap.meldungen) {
          <tr>
+             <td>@line.meldung</td>
              <td><a href="@{"scope/ta"+line.tanr + ".html"}">
              @{if(line.tanr.isEmpty) "missing" else line.tanr }</a></td>
              <td>@{line.shorttext}</td>
-             <td>@{line.longtext}</td>
          </tr>
      }
      </tbody>

@@ -36,6 +36,7 @@ object Schema {
   ))
 
   private val meldungen = DBTable("meldungen", List(
+    DBInt("meldung"),
     DBString("tanr"),
     DBString("shorttext"),
     DBString("longtext")

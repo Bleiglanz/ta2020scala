@@ -28,8 +28,11 @@ object JDBC {
         rowcount = rowcount + 1
         (1 to meta.getColumnCount) foreach { i =>
            val key = meta.getColumnLabel(i).toUpperCase()
-           val betterkey = if(result.contains(key)) s"""${key}${rowcount}""" else key
-           result(betterkey)=rs.getString(i) }
+           if (key!="ANRE_PK_ID" && key!="ANRE_IMPORT_LFDNR"){
+             val betterkey = if(result.contains(key)) s"""${key}${rowcount}""" else key
+             val evenbetterkey = if(key=="ANRE_FILE_DATUM") "[RETRIEVED FROM SAP]" else betterkey
+             result(evenbetterkey)=rs.getString(i) }
+           }
       }
       result.toMap
     }

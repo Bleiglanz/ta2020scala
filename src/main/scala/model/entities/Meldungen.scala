@@ -31,6 +31,7 @@ case object Meldungen{
 
 final case class Meldungen (
   id:Option[Long],
+  meldung:Int,
   tanr:String,
   shorttext:String,
   longtext:String,
@@ -41,12 +42,13 @@ final case class Meldungen (
 
 final class MeldungenTable(tag: Tag) extends Table[Meldungen](tag, "meldungen") {
   def id:Rep[Long] = column[Long]("id", O.PrimaryKey, O.AutoInc)
+  def meldung:Rep[Int] = column[Int]("meldung")
   def tanr:Rep[String] = column[String]("tanr")
   def shorttext:Rep[String] = column[String]("shorttext")
   def longtext:Rep[String] = column[String]("longtext")
   def created:Rep[Timestamp] = column[Timestamp]("created", SqlType("timestamp not null default CURRENT_TIMESTAMP"))
   def updated:Rep[Timestamp] = column[Timestamp]("updated", SqlType("timestamp not null default CURRENT_TIMESTAMP"))
-  def * : ProvenShape[Meldungen] = (id.?,tanr,shorttext,longtext,created,updated) <> ((Meldungen.apply _).tupled,Meldungen.unapply)
+  def * : ProvenShape[Meldungen] = (id.?,meldung,tanr,shorttext,longtext,created,updated) <> ((Meldungen.apply _).tupled,Meldungen.unapply)
 }
 
 
