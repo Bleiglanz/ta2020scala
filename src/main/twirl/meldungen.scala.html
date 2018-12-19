@@ -1,23 +1,22 @@
 @(p:tasks.Page, config:ta2020.Configuration)
-<div class="">
-   <table id="maintable" class="table table-sm table-striped table-bordered">
+<h4>Scope</h4>
+<table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp" id="main">
      <thead>
        <tr>
-           <th>MELDUNG</th>
-           <th>TA.NR</th>
-           <th>NAME</th>
+           <th class="mdl-data-table__cell--non-numeric">MELDUNG</th>
+           <th class="mdl-data-table__cell--non-numeric">TA.NR</th>
+           <th class="mdl-data-table__cell--non-numeric">NAME</th>
        </tr>
      </thead>
      <tbody>
      @for(line<-p.contentMap.meldungen) {
          <tr>
-             <td>@line.meldung</td>
-             <td><a href="@{"scope/ta"+line.tanr + ".html"}">
+             <td class="mdl-data-table__cell--non-numeric">@line.meldung</td>
+             <td class="mdl-data-table__cell--non-numeric"><a href="@{"scope/ta"+line.tanr + ".html"}">
              @{if(line.tanr.isEmpty) "missing" else line.tanr }</a></td>
-             <td>@{line.shorttext}</td>
+             <td class="mdl-data-table__cell--non-numeric">@{line.shorttext}</td>
          </tr>
      }
      </tbody>
-   </table>
-</div>
+</table>
 

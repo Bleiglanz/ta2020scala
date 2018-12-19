@@ -49,7 +49,7 @@ case object ImportData extends TaskTrait {
       }
       IO.executeDBIOSeq(Excelsheet.insertAction(sheets))
 
-      IO.executeDBPlain(config.postcreatesql)
+      IO.executeDBPlain(List(scala.io.Source.fromFile(config.postcreatesql).mkString("")))
 
     } finally {
       session.close

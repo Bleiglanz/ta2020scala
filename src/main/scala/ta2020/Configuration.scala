@@ -35,12 +35,8 @@ trait Configuration{
   def scandirs:List[String]
   def scanfiles:List[String]
   def outputdir:String
-  def htmltitle:String
-  def infosystemTa:String
-  def uilinks:List[(String,String)]
   def excel2db:List[ExcelImport]
-  def uihome:String
-  def postcreatesql:List[String]
+  def postcreatesql:String
 }
 
 case object Config extends Configuration {
@@ -59,17 +55,9 @@ case object Config extends Configuration {
 
   val outputdir:String = config.getString("ta2020.outputdir")
 
-  val htmltitle:String = config.getString("ta2020.htmltitle") + currentdate
-
-  val infosystemTa:String = config.getString("ta2020.infosystem_ta")
-
-  val uilinks:List[(String,String)] = config.getObjectList("ta2020.ui.links").asScala.toList.map(_.toConfig).map(c=>(c.getString("text"),c.getString("url")))
-
   val excel2db:List[ExcelImport] = config.getObjectList("ta2020.excel.imports").asScala.toList.map(c=>ExcelImport(c.toConfig))
 
-  val uihome:String = config.getString("ta2020.ui.home")
-
-  val postcreatesql:List[String] = config.getStringList("ta2020.postcreatesql").asScala.toList
+  val postcreatesql:String = config.getString("ta2020.postcreatesql")
 
 }
 
