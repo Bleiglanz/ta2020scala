@@ -37,6 +37,7 @@ trait Configuration{
   def outputdir:String
   def excel2db:List[ExcelImport]
   def postcreatesql:String
+  def precreatesql:String
 }
 
 case object Config extends Configuration {
@@ -56,6 +57,8 @@ case object Config extends Configuration {
   val outputdir:String = config.getString("ta2020.outputdir")
 
   val excel2db:List[ExcelImport] = config.getObjectList("ta2020.excel.imports").asScala.toList.map(c=>ExcelImport(c.toConfig))
+
+  val precreatesql:String = config.getString("ta2020.precreatesql")
 
   val postcreatesql:String = config.getString("ta2020.postcreatesql")
 

@@ -32,10 +32,12 @@ case object ImportData extends TaskTrait {
 
     implicit val db: PostgresProfile.api.Database = config.db
 
+    IO.executeDBPlain(List(scala.io.Source.fromFile(config.precreatesql).mkString("")))
     IO.executeDBIOSeq(Document.dropAction andThen Document.createAction)
     IO.executeDBIOSeq(Excelsheet.dropAction andThen Excelsheet.createAction)
-    IO.executeDBIOSeq(Meldungen.dropAction andThen Meldungen.createAction)
-    IO.executeDBIOSeq(Steckscheiben.dropAction andThen Steckscheiben.createAction)
+
+    //IO.executeDBIOSeq(Meldungen.dropAction andThen Meldungen.createAction)
+    //IO.executeDBIOSeq(Steckscheiben.dropAction andThen Steckscheiben.createAction)
 
     val docs = IO.getListOfAllowedFiles(config.scandirs, config.scanfiles)
     IO.executeDBIOSeq(Document.insertAction(docs))

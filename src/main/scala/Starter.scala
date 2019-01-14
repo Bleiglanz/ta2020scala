@@ -18,14 +18,13 @@ import tasks.{GenerateDatabaseCode, GenerateWebsite, ImportData, GenerateScopeIt
 object Starter {
 
   private val tasks:Map[String,TaskTrait] =
-    Map("gen"->GenerateDatabaseCode,
-        "site"->GenerateWebsite,
+    Map( //"gen"->GenerateDatabaseCode,
+         //"site"->GenerateWebsite,
          "import"->ImportData,
-         "scope"->GenerateScopeItemPages
+         //"scope"->GenerateScopeItemPages
     )
 
   def main(args: Array[String]): Unit = {
-
     try {
       args foreach { s =>
         val t: TaskTrait = tasks(s)

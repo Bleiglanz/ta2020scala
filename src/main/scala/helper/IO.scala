@@ -90,7 +90,7 @@ object IO {
         try {
           val conn = db.source.createConnection()
           conn.prepareStatement(cmd).execute()
-          print(s"execute $cmd \n")
+          println(s"execute $cmd \n")
           conn.close()
         } catch {
           case e:Throwable => e.printStackTrace()
