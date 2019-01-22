@@ -32,33 +32,34 @@ import scala.concurrent.duration._
 object IO {
 
   def writeUTF8File(fname: String, content: String): Unit = {
-    val f:File = new File(fname)
+    val f: File = new File(fname)
     f.getParentFile.mkdirs()
     val pw = new PrintWriter(f, "UTF-8")
     pw.print(content)
     pw.close()
   }
 
-  val isExcel:String => Boolean = List("xls", "xlsm", "xlsx").contains(_)
+  val isExcel: String => Boolean = List("xls", "xlsm", "xlsx").contains(_)
 
   private def fileAllowed(file: File): Boolean = Option(file) match {
     case None => false
     case Some(f) => f.exists && f.isFile
   }
+
   def getListOfAllowedFiles(dirs: List[String], filenames: List[String], pred: File => Boolean = fileAllowed): List[Document] = {
 
-    def makedoc(f:File):Document = {
+    def makedoc(f: File): Document = {
       val name = f.getName
       val regex = """([0-9]{4})[.-][0-9]{3}""".r()
-      val tanr:String = regex.findFirstIn(name).getOrElse("").replace('-','.')
+      val tanr: String = regex.findFirstIn(name).getOrElse("").replace('-', '.')
       Document(None,
-               name,
-               "",
-               f.getAbsolutePath,
-               name.split('.').last,f.length,tanr,
-               java.sql.Timestamp.from(Files.getLastModifiedTime(f.toPath).toInstant),
-               java.sql.Timestamp.from(Instant.now),
-               java.sql.Timestamp.from(Instant.now))
+        name,
+        "",
+        f.getAbsolutePath,
+        name.split('.').last, f.length, tanr,
+        java.sql.Timestamp.from(Files.getLastModifiedTime(f.toPath).toInstant),
+        java.sql.Timestamp.from(Instant.now),
+        java.sql.Timestamp.from(Instant.now))
     }
 
     @tailrec def scanDirs(dirs: List[File], docs: List[Document]): List[Document] = dirs match {
@@ -68,37 +69,31 @@ object IO {
         case Some(l) => scanDirs(l.filter(_.isDirectory).toList ::: rest, l.filter(f => pred(f)).toList.map(makedoc) ::: docs)
       }
     }
+
     val df = dirs.map(new File(_)).filter(_.isDirectory)
     scanDirs(df, filenames.map(new File(_)).filter(pred).map(makedoc))
   }
 
-  def executeDBIOSeq(actions:DBIOAction[Unit, NoStream, _] )(implicit db:Database) : Unit = {
+  def executeDBIOSeq(actions: DBIOAction[Unit, NoStream, _])(implicit db: Database): Unit = {
     val timeout = 25.seconds
     val f: Future[Unit] = db.run(actions)
     Await.result(f, timeout)
   }
 
-  def executeDBIOQuery[T](actions:DBIO[Seq[T]])(implicit db:Database) : Seq[T]= {
+  def executeDBIOQuery[T](actions: DBIO[Seq[T]])(implicit db: Database): Seq[T] = {
     val timeout = 25.seconds
     val f: Future[Seq[T]] = db.run(actions)
     Await.result(f, timeout)
   }
 
-  def executeDBPlain(postcreatesql: List[String])(implicit db:Database) : Unit = {
-    postcreatesql foreach {
-      cmd => {
-        try {
-          val conn = db.source.createConnection()
-          conn.prepareStatement(cmd).execute()
-          println(s"execute $cmd \n")
-          conn.close()
-        } catch {
-          case e:Throwable => e.printStackTrace()
-        }
-      }
+  def executeDBPlain(sql: String)(implicit db: Database): Unit = {
+    try {
+      val conn = db.source.createConnection()
+      println(s"executesql: ${sql.take(10)} \n")
+      conn.prepareStatement(sql).execute()
+      conn.close()
+    } catch {
+      case e: Throwable => e.printStackTrace()
     }
   }
-
-
-
 }

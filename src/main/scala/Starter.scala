@@ -18,19 +18,19 @@ import tasks.{GenerateDatabaseCode, GenerateWebsite, ImportData, GenerateScopeIt
 object Starter {
 
   private val tasks:Map[String,TaskTrait] =
-    Map( //"gen"->GenerateDatabaseCode,
-         //"site"->GenerateWebsite,
+    Map( "gen"->GenerateDatabaseCode,
+         "site"->GenerateWebsite,
          "import"->ImportData,
-         //"scope"->GenerateScopeItemPages
+         "scope"->GenerateScopeItemPages
     )
 
   def main(args: Array[String]): Unit = {
     try {
       args foreach { s =>
         val t: TaskTrait = tasks(s)
-        print(s"\nStart ${t.info} ...\n")
+        print(s"\n###Start: ${t.info} \n")
         t.run()
-        print(s"...${t.info} done.\n")
+        print(s"###Stop: ${t.info} \n")
       }
     } catch {
       case e: Throwable =>

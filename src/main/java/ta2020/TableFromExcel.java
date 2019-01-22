@@ -304,7 +304,7 @@ public class TableFromExcel {
             if (0 == z % 1000) numrows += ps.executeBatch().length;
         }
         numrows+=ps.executeBatch().length;
-        System.out.println("last batch inserted " + numrows + " rows into " + this.name);
+        System.out.println("batch: " + numrows + " rows into " + this.name);
     }
 
     private void createTable(java.sql.Connection conn) throws SQLException {

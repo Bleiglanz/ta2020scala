@@ -32,7 +32,8 @@ object Schema {
     DBString("sheetname"),
     DBString("tablename"),
     DBInt("cols"),
-    DBInt("rows")
+    DBInt("rows"),
+    DBTimestamp("file_last_modified")
   ))
 
   private val meldungen = DBTable("meldungen", List(

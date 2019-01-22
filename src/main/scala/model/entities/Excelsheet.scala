@@ -36,6 +36,7 @@ final case class Excelsheet (
   tablename:String,
   cols:Int,
   rows:Int,
+  file_last_modified:Timestamp,
   created: Timestamp,
   updated: Timestamp
 )
@@ -48,9 +49,10 @@ final class ExcelsheetTable(tag: Tag) extends Table[Excelsheet](tag, "excelsheet
   def tablename:Rep[String] = column[String]("tablename")
   def cols:Rep[Int] = column[Int]("cols")
   def rows:Rep[Int] = column[Int]("rows")
+  def file_last_modified:Rep[Timestamp] = column[Timestamp]("file_last_modified")
   def created:Rep[Timestamp] = column[Timestamp]("created", SqlType("timestamp not null default CURRENT_TIMESTAMP"))
   def updated:Rep[Timestamp] = column[Timestamp]("updated", SqlType("timestamp not null default CURRENT_TIMESTAMP"))
-  def * : ProvenShape[Excelsheet] = (id.?,filename,sheetname,tablename,cols,rows,created,updated) <> ((Excelsheet.apply _).tupled,Excelsheet.unapply)
+  def * : ProvenShape[Excelsheet] = (id.?,filename,sheetname,tablename,cols,rows,file_last_modified,created,updated) <> ((Excelsheet.apply _).tupled,Excelsheet.unapply)
 }
 
 

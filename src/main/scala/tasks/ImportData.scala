@@ -20,6 +20,8 @@ import model.entities.{Document, Excelsheet, Meldungen, Steckscheiben}
 import slick.jdbc.PostgresProfile
 import java.sql.Timestamp
 import java.time.Instant
+import java.io.File
+import java.nio.file.Files
 
 case object ImportData extends TaskTrait {
 
@@ -32,30 +34,29 @@ case object ImportData extends TaskTrait {
 
     implicit val db: PostgresProfile.api.Database = config.db
 
-    IO.executeDBPlain(List(scala.io.Source.fromFile(config.precreatesql).mkString("")))
+    IO.executeDBPlain(scala.io.Source.fromFile(config.precreatesql).mkString)
+
     IO.executeDBIOSeq(Document.dropAction andThen Document.createAction)
     IO.executeDBIOSeq(Excelsheet.dropAction andThen Excelsheet.createAction)
-
-    //IO.executeDBIOSeq(Meldungen.dropAction andThen Meldungen.createAction)
-    //IO.executeDBIOSeq(Steckscheiben.dropAction andThen Steckscheiben.createAction)
+    IO.executeDBIOSeq(Meldungen.dropAction andThen Meldungen.createAction)
+    IO.executeDBIOSeq(Steckscheiben.dropAction andThen Steckscheiben.createAction)
 
     val docs = IO.getListOfAllowedFiles(config.scandirs, config.scanfiles)
     IO.executeDBIOSeq(Document.insertAction(docs))
+    print(s"documents: done\n")
 
     val session = db.createSession
     try {
       val sheets = config.excel2db.map {
         ex:ExcelImport =>
           val (cols,rows) = ta2020.TableFromExcel.procSingleExcelGeneral("ex_", ex.src, ex.sheet, ex.dest, session.conn, ex.header)
-          model.entities.Excelsheet(None,ex.src,ex.sheet,ex.dest,cols,rows,now,now)
+          val timestamp = java.sql.Timestamp.from(Files.getLastModifiedTime(new File(ex.src).toPath).toInstant)
+          model.entities.Excelsheet(None,ex.src,ex.sheet,ex.dest,cols,rows,now,now,timestamp)
       }
       IO.executeDBIOSeq(Excelsheet.insertAction(sheets))
-
-      IO.executeDBPlain(List(scala.io.Source.fromFile(config.postcreatesql).mkString("")))
-
+      IO.executeDBPlain(scala.io.Source.fromFile(config.postcreatesql).mkString)
     } finally {
       session.close
-      print("session closed\n")
     }
   }
 }
