@@ -51,7 +51,7 @@ case object ImportData extends TaskTrait {
         ex:ExcelImport =>
           val (cols,rows) = ta2020.TableFromExcel.procSingleExcelGeneral("ex_", ex.src, ex.sheet, ex.dest, session.conn, ex.header)
           val timestamp = java.sql.Timestamp.from(Files.getLastModifiedTime(new File(ex.src).toPath).toInstant)
-          model.entities.Excelsheet(None,ex.src,ex.sheet,ex.dest,cols,rows,now,now,timestamp)
+          model.entities.Excelsheet(None,ex.src,ex.sheet,ex.dest,cols,rows,timestamp,now,now)
       }
       IO.executeDBIOSeq(Excelsheet.insertAction(sheets))
       IO.executeDBPlain(scala.io.Source.fromFile(config.postcreatesql).mkString)
