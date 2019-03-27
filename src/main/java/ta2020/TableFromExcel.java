@@ -14,8 +14,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.text.DateFormat;
-import java.util.HashSet;
-import java.util.Locale;
+import java.time.Instant;
+import java.util.*;
 
 
 public class TableFromExcel {
@@ -33,22 +33,106 @@ public class TableFromExcel {
         return null == s || 0 == s.trim().length();
     }
 
-    public static scala.Tuple2<Integer,Integer> procSingleExcelGeneral(String prefix, String filename, String sheetname, String desttablename, Connection conn, int header) {
-        //List<Path> pathsToExcelFiles
-        Path p = java.nio.file.Paths.get(filename);
-        //System.out.println("Excelfile recognized "+p.toFile().getAbsolutePath());
-
+    private static Workbook getWorkbook(File f){
         // 4.1: generate a workbook if possible
         Workbook wb = null;
         try {
-            wb = new HSSFWorkbook(new FileInputStream(p.toFile()));
+            wb = new HSSFWorkbook(new FileInputStream(f));
         } catch (Exception e1) {
             try {
-                wb = new XSSFWorkbook(new FileInputStream(p.toFile()));
+                wb = new XSSFWorkbook(new FileInputStream(f));
             } catch (Exception e2) {
-                System.out.println("Kann Workbook nicht erstellen xls / oder xslt \n" + p.toString() + e2);
+                System.out.println("Kann Excel Workbook nicht erstellen \n" + f.getAbsoluteFile() + e2);
             }
         }
+        return wb;
+    }
+
+    public static scala.Tuple2<Integer,Integer> procMergeExcel(String prefix, String dirname, Connection conn){
+        Path p = java.nio.file.Paths.get(dirname);
+        File mergedir = p.toFile();
+        if (null!=mergedir && mergedir.exists() && mergedir.isDirectory()) {
+            for (File f : Objects.requireNonNull(mergedir.listFiles((f, x) ->
+                    x != null && (x.toLowerCase().endsWith(".xlsx") ||
+                                  x.toLowerCase().endsWith(".xlsm") ||
+                                  x.toLowerCase().endsWith(".xls"))))) {
+                String directory=mergedir.getAbsolutePath();
+                String filename =f.getName();
+                Workbook wb = getWorkbook(f);
+                if(null!=wb) {
+                    FormulaEvaluator eval = wb.getCreationHelper().createFormulaEvaluator();
+                    int sheets = wb.getNumberOfSheets();
+                    for (int i = 0; i < sheets; i++) {
+                        Sheet s = wb.getSheetAt(i);
+                            TableFromExcel tabelle = new TableFromExcel(p, s, eval, prefix, "", -1);
+                            if (null != tabelle.getData() && tabelle.getData().length > 0) {
+                                System.out.println("...merge blatt "+tabelle.name+" from "+filename);
+                                try {
+                                    insertmergerows(tabelle,directory,f,conn);
+                                } catch (Exception e) {
+                                    System.out.println(String.format("MERGE...PROBLEM MIT %s %s %s",directory,f.getName(),s.getSheetName()));
+                                    e.printStackTrace();
+                                    return new scala.Tuple2<>(0,0);
+                                }
+                            }
+                    } // ende sheet
+                    System.out.println("Ende Sheet");
+                } //ende Workbook
+                System.out.println("Ende Workbook");
+            } // ende über alle Dateien
+        } // ende dieses directories
+        return new scala.Tuple2<>(0, 0);
+    }
+
+    public static void insertmergerows(TableFromExcel tabelle, String dir, File datei, Connection conn) throws Exception {
+        if (0 == tabelle.zeilen) return;
+        java.sql.Timestamp fdate = null;
+        FileTime fileTime = Files.getLastModifiedTime(datei.toPath());
+        fdate = java.sql.Timestamp.from(Instant.ofEpochMilli(fileTime.toMillis()));
+        if(fdate==null) throw new Exception("kein Zeitstempel für Datei"+datei.getAbsolutePath());
+        StringBuilder sql = new StringBuilder();
+
+        for(int zeile=0; zeile<tabelle.zeilen; zeile++) {
+            sql.append("INSERT INTO mergetables (dir,file,sheet,fdate,idate,");
+            for (int i = 0; i < 100; i++) {
+                sql.append(String.format("s%02d", i));
+                if (i < 99) sql.append(",");
+            }
+            sql.append(") VALUES (?");
+            for (int s = 0; s < 104; s++) {
+                sql.append(",?");
+            }
+            sql.append(");");
+        }
+        int numrows = 0;
+        PreparedStatement ps = conn.prepareStatement(sql.toString());
+        for (int z = 0; z < tabelle.zeilen; z++) {
+            ps.setString(1,dir.toUpperCase());
+            ps.setString(2,datei.getName());
+            ps.setString(3,tabelle.getName());
+            ps.setTimestamp(4,fdate);
+            ps.setTimestamp(5,java.sql.Timestamp.from(Instant.now()));
+            int s = 0;
+            for (; s < tabelle.spalten; s++) {
+                int index = s+6;
+                String data = tabelle.data[z][s];
+                ps.setString(index, data!=null ? data : "");
+            }
+            for (; s<100;s++){
+                int index = s+6;
+                ps.setString(index,"");
+            }
+
+            ps.addBatch();
+            if (0 == z % 1000) numrows += ps.executeBatch().length;
+        }
+        numrows+=ps.executeBatch().length;
+        System.out.println("merge...batch: " + numrows + " rows into " + tabelle.name);
+    }
+
+    public static scala.Tuple2<Integer,Integer> procSingleExcelGeneral(String prefix, String filename, String sheetname, String desttablename, Connection conn, int header) {
+        Path p = java.nio.file.Paths.get(filename);
+        Workbook wb = getWorkbook(p.toFile());
         // 4.2: if there is a workbook, generate a Table for each sheet
         ta2020.TableFromExcel tabelle = null;
         if (null != wb) {
@@ -78,11 +162,7 @@ public class TableFromExcel {
         } else {
             return new scala.Tuple2<>(0, 0);
         }
-
     }
-
-
-
 
     public String getName() {
         return name;
@@ -104,8 +184,6 @@ public class TableFromExcel {
 
     private final int headerline;
 
-    private final Path dateipfad;
-
     private String[][] getData() {
         return data;
     }
@@ -113,7 +191,7 @@ public class TableFromExcel {
     private TableFromExcel(final Path datei, final Sheet sheet, final FormulaEvaluator a_evaluator, String prefix, String desttablename, int header) {
 
         String pfad = datei.toAbsolutePath().getFileName().toString();
-        this.dateipfad = datei.toAbsolutePath();
+        Path dateipfad = datei.toAbsolutePath();
         if (null == prefix) prefix = "";
         String tempname = prefix.concat(cleanString(pfad.concat("_").concat(sheet.getSheetName())));
         String tempname2 = ((tempname.length() > 124 ? tempname.substring(0, 124) : tempname).toLowerCase()).replace('-', '_');
@@ -306,6 +384,7 @@ public class TableFromExcel {
         numrows+=ps.executeBatch().length;
         System.out.println("batch: " + numrows + " rows into " + this.name);
     }
+
 
     private void createTable(java.sql.Connection conn) throws SQLException {
 

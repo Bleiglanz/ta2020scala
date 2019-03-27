@@ -41,10 +41,6 @@ case object ImportData extends TaskTrait {
     IO.executeDBIOSeq(Meldungen.dropAction andThen Meldungen.createAction)
     IO.executeDBIOSeq(Steckscheiben.dropAction andThen Steckscheiben.createAction)
 
-    val docs = IO.getListOfAllowedFiles(config.scandirs, config.scanfiles)
-    IO.executeDBIOSeq(Document.insertAction(docs))
-    print(s"documents: done\n")
-
     val session = db.createSession
     try {
       val sheets = config.excel2db.map {
@@ -55,8 +51,19 @@ case object ImportData extends TaskTrait {
       }
       IO.executeDBIOSeq(Excelsheet.insertAction(sheets))
       IO.executeDBPlain(scala.io.Source.fromFile(config.postcreatesql).mkString)
+
+      config.excelmerge.foreach { dirname =>
+        print("MERGE: "+dirname)
+        val (cols,rows) = ta2020.TableFromExcel.procMergeExcel("ex_", dirname, session.conn)
+      }
+
     } finally {
       session.close
     }
+
+    print("start crawling directories....")
+    val docs = IO.getListOfAllowedFiles(config.scandirs, config.scanfiles)
+    IO.executeDBIOSeq(Document.insertAction(docs))
+    print(s"crawling: done\n")
   }
 }
