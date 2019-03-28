@@ -86,24 +86,20 @@ public class TableFromExcel {
 
     public static void insertmergerows(TableFromExcel tabelle, String dir, File datei, Connection conn) throws Exception {
         if (0 == tabelle.zeilen) return;
-        java.sql.Timestamp fdate = null;
         FileTime fileTime = Files.getLastModifiedTime(datei.toPath());
-        fdate = java.sql.Timestamp.from(Instant.ofEpochMilli(fileTime.toMillis()));
-        if(fdate==null) throw new Exception("kein Zeitstempel für Datei"+datei.getAbsolutePath());
+        java.sql.Timestamp fdate = java.sql.Timestamp.from(Instant.ofEpochMilli(fileTime.toMillis()));
         StringBuilder sql = new StringBuilder();
 
-        for(int zeile=0; zeile<tabelle.zeilen; zeile++) {
-            sql.append("INSERT INTO mergetables (dir,file,sheet,fdate,idate,");
-            for (int i = 0; i < 100; i++) {
-                sql.append(String.format("s%02d", i));
-                if (i < 99) sql.append(",");
-            }
-            sql.append(") VALUES (?");
-            for (int s = 0; s < 104; s++) {
-                sql.append(",?");
-            }
-            sql.append(");");
+        sql.append("INSERT INTO mergetable (dir,file,sheet,fdate,idate,zeile");
+        for (int i = 0; i < 100; i++) {
+            sql.append(String.format(",s%02d", i));
         }
+        sql.append(") VALUES (?");
+        for (int s = 0; s < 105; s++) {
+            sql.append(",?");
+        }
+        sql.append(");");
+
         int numrows = 0;
         PreparedStatement ps = conn.prepareStatement(sql.toString());
         for (int z = 0; z < tabelle.zeilen; z++) {
@@ -112,14 +108,15 @@ public class TableFromExcel {
             ps.setString(3,tabelle.getName());
             ps.setTimestamp(4,fdate);
             ps.setTimestamp(5,java.sql.Timestamp.from(Instant.now()));
+            ps.setInt(6,z);
             int s = 0;
             for (; s < tabelle.spalten; s++) {
-                int index = s+6;
+                int index = s+7;
                 String data = tabelle.data[z][s];
                 ps.setString(index, data!=null ? data : "");
             }
             for (; s<100;s++){
-                int index = s+6;
+                int index = s+7;
                 ps.setString(index,"");
             }
 

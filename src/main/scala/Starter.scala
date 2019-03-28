@@ -26,11 +26,15 @@ object Starter {
 
   def main(args: Array[String]): Unit = {
     try {
+      if(args.isEmpty){
+        tasks("import").run()
+      } else {
       args foreach { s =>
         val t: TaskTrait = tasks(s)
         print(s"\n###Start: ${t.info} \n")
         t.run()
         print(s"###Stop: ${t.info} \n")
+      }
       }
     } catch {
       case e: Throwable =>
