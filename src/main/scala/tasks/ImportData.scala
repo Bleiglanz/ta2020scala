@@ -34,7 +34,9 @@ case object ImportData extends TaskTrait {
 
     implicit val db: PostgresProfile.api.Database = config.db
 
-    IO.executeDBPlain(scala.io.Source.fromFile(config.precreatesql).mkString)
+    val presource = scala.io.Source.fromFile(config.precreatesql)
+    IO.executeDBPlain(presource.mkString)
+    presource.close()
 
     IO.executeDBIOSeq(Document.dropAction andThen Document.createAction)
     IO.executeDBIOSeq(Excelsheet.dropAction andThen Excelsheet.createAction)
@@ -50,20 +52,23 @@ case object ImportData extends TaskTrait {
           model.entities.Excelsheet(None,ex.src,ex.sheet,ex.dest,cols,rows,timestamp,now,now)
       }
       IO.executeDBIOSeq(Excelsheet.insertAction(sheets))
-      IO.executeDBPlain(scala.io.Source.fromFile(config.postcreatesql).mkString)
 
       config.excelmerge.foreach { dirname =>
-        print("MERGE: "+dirname)
-        val (cols,rows) = ta2020.TableFromExcel.procMergeExcel("ex_", dirname, session.conn)
+        print("MERGE ALL SHEETS IN: " + dirname + "\n")
+        val (_,_) = ta2020.TableFromExcel.procMergeExcel("ex_", dirname, session.conn)
       }
+
+      print("start crawling directories....\n")
+      val docs = IO.getListOfAllowedFiles(config.scandirs, config.scanfiles)
+      IO.executeDBIOSeq(Document.insertAction(docs))
+      print(s"crawling: done\n")
+      val postsource = scala.io.Source.fromFile(config.postcreatesql)
+      IO.executeDBPlain(postsource.mkString)
+      postsource.close()
 
     } finally {
       session.close
     }
 
-    print("start crawling directories....")
-    val docs = IO.getListOfAllowedFiles(config.scandirs, config.scanfiles)
-    IO.executeDBIOSeq(Document.insertAction(docs))
-    print(s"crawling: done\n")
   }
 }

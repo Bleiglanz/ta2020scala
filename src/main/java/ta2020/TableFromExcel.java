@@ -66,7 +66,7 @@ public class TableFromExcel {
                         Sheet s = wb.getSheetAt(i);
                             TableFromExcel tabelle = new TableFromExcel(p, s, eval, prefix, "", -1);
                             if (null != tabelle.getData() && tabelle.getData().length > 0) {
-                                System.out.println("...merge blatt "+tabelle.name+" from "+filename);
+                                //System.out.println("...merge blatt "+tabelle.name+" from "+filename);
                                 try {
                                     insertmergerows(tabelle,directory,f,conn);
                                 } catch (Exception e) {
@@ -76,9 +76,9 @@ public class TableFromExcel {
                                 }
                             }
                     } // ende sheet
-                    System.out.println("Ende Sheet");
+                    //System.out.println("Ende Sheet");
                 } //ende Workbook
-                System.out.println("Ende Workbook");
+                //System.out.println("Ende Workbook");
             } // ende über alle Dateien
         } // ende dieses directories
         return new scala.Tuple2<>(0, 0);
