@@ -24,7 +24,8 @@ object Schema {
     DBString("extension"),
     DBLong("size"),
     DBString("tanr"),
-    DBTimestamp("file_last_modified")
+    DBTimestamp("file_last_modified"),
+    DBString("content")
   ))
 
   private val excelsheet = DBTable("excelsheet", List(

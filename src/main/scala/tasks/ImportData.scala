@@ -59,9 +59,9 @@ case object ImportData extends TaskTrait {
       }
 
       print("start crawling directories....\n")
-      val docs = IO.getListOfAllowedFiles(config.scandirs, config.scanfiles)
-      IO.executeDBIOSeq(Document.insertAction(docs))
+      IO.uploadDocumentsFromDir(config.scandirs,config.scanfiles)
       print(s"crawling: done\n")
+
       val postsource = scala.io.Source.fromFile(config.postcreatesql)
       IO.executeDBPlain(postsource.mkString)
       postsource.close()
@@ -69,6 +69,5 @@ case object ImportData extends TaskTrait {
     } finally {
       session.close
     }
-
   }
 }

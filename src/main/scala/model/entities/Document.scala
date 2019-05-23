@@ -38,6 +38,7 @@ final case class Document (
   size:Long,
   tanr:String,
   file_last_modified:Timestamp,
+  content:String,
   created: Timestamp,
   updated: Timestamp
 )
@@ -52,9 +53,10 @@ final class DocumentTable(tag: Tag) extends Table[Document](tag, "document") {
   def size:Rep[Long] = column[Long]("size")
   def tanr:Rep[String] = column[String]("tanr")
   def file_last_modified:Rep[Timestamp] = column[Timestamp]("file_last_modified")
+  def content:Rep[String] = column[String]("content")
   def created:Rep[Timestamp] = column[Timestamp]("created", SqlType("timestamp not null default CURRENT_TIMESTAMP"))
   def updated:Rep[Timestamp] = column[Timestamp]("updated", SqlType("timestamp not null default CURRENT_TIMESTAMP"))
-  def * : ProvenShape[Document] = (id.?,name,doctype,fullpath,extension,size,tanr,file_last_modified,created,updated) <> ((Document.apply _).tupled,Document.unapply)
+  def * : ProvenShape[Document] = (id.?,name,doctype,fullpath,extension,size,tanr,file_last_modified,content,created,updated) <> ((Document.apply _).tupled,Document.unapply)
 }
 
 

@@ -15,13 +15,14 @@
 // limitations under the License.
 package helper
 
-import java.io.File
+import java.io.{File, FileInputStream, PrintWriter}
 import java.time.Instant
 
 import model.entities.Document
 import slick.dbio.DBIOAction
-import java.io.PrintWriter
 import java.nio.file.Files
+
+//import org.apache.tika.Tika
 
 import scala.annotation.tailrec
 import slick.jdbc.PostgresProfile.api._
@@ -29,7 +30,12 @@ import slick.jdbc.PostgresProfile.api._
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
+
 object IO {
+
+  //private val tika:Tika = new Tika
+
+  private val config = ta2020.Config
 
   def writeUTF8File(fname: String, content: String): Unit = {
     val f: File = new File(fname)
@@ -41,37 +47,60 @@ object IO {
 
   val isExcel: String => Boolean = List("xls", "xlsm", "xlsx").contains(_)
 
+  val isPDF: String => Boolean = List("PDF","pdf").contains(_)
+
   private def fileAllowed(file: File): Boolean = Option(file) match {
     case None => false
     case Some(f) => f.exists && f.isFile
   }
 
-  def getListOfAllowedFiles(dirs: List[String], filenames: List[String], pred: File => Boolean = fileAllowed): List[Document] = {
+  def uploadDocumentsFromDir(dirs: List[String], filenames: List[String], pred: File => Boolean = fileAllowed)(implicit db:Database):Unit = {
 
     def makedoc(f: File): Document = {
       val name = f.getName
+      val extension = name.split('.').last.toLowerCase()
       val regex = """([0-9]{4})[.-][0-9]{3}""".r()
       val tanr: String = regex.findFirstIn(name).getOrElse("").replace('-', '.')
+      val text:String = if (config.extractText.contains(extension)) {
+//        try {
+//          val fs:FileInputStream = new FileInputStream(f)
+//          println(s"parse Datei $name")
+//          tika.parseToString(fs)
+//        } catch {
+//          case _: Exception => "Fehler beim Extrahieren von Text"
+//        } finally {
+//        }
+        "tika"
+      }else{
+        ""
+      }
       Document(None,
         name,
         "",
         f.getAbsolutePath,
-        name.split('.').last, f.length, tanr,
+        extension
+        , f.length, tanr,
         java.sql.Timestamp.from(Files.getLastModifiedTime(f.toPath).toInstant),
+        text,
         java.sql.Timestamp.from(Instant.now),
         java.sql.Timestamp.from(Instant.now))
     }
 
-    @tailrec def scanDirs(dirs: List[File], docs: List[Document]): List[Document] = dirs match {
-      case Nil => docs
+    @tailrec def scanDirs(dirs: List[File], filelist: List[File]): List[File] = dirs match {
+      case Nil => filelist
       case head :: rest => Option(head.listFiles) match {
-        case None => scanDirs(rest, docs)
-        case Some(l) => scanDirs(l.filter(_.isDirectory).toList ::: rest, l.filter(f => pred(f)).toList.map(makedoc) ::: docs)
+        case None => scanDirs(rest, filelist)
+        case Some(l) => scanDirs(l.filter(_.isDirectory).toList ::: rest, l.filter(f => pred(f)).toList ::: filelist)
       }
     }
 
     val df = dirs.map(new File(_)).filter(_.isDirectory)
-    scanDirs(df, filenames.map(new File(_)).filter(pred).map(makedoc))
+    val filelist = scanDirs(df, filenames.map(new File(_)).filter(pred))
+    for(f <- filelist) {
+      val doc= makedoc(f)
+      IO.executeDBIOSeq(Document.insertAction(Seq(doc)))
+    }
+
   }
 
   def executeDBIOSeq(actions: DBIOAction[Unit, NoStream, _])(implicit db: Database): Unit = {

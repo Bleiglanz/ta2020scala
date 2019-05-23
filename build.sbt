@@ -38,16 +38,16 @@ scalacOptions ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "org.scalatest" %% "scalatest" % "3.0.5" % "test",
-  "com.typesafe" % "config" % "1.3.3",
-  "com.typesafe.slick" %% "slick" % "3.2.3",
+//  "org.apache.tika" % "tika-parsers" % "1.21",
+  "com.typesafe" % "config" % "1.3.2",
+  "com.typesafe.slick" %% "slick" % "3.3.0",
   "org.slf4j" % "slf4j-nop" % "1.7.25",
-  "com.typesafe.slick" %% "slick-hikaricp" % "3.2.3",
-  "org.xerial" % "sqlite-jdbc" % "3.23.1",
+  "com.typesafe.slick" %% "slick-hikaricp" % "3.3.0",
+  "org.xerial" % "sqlite-jdbc" % "3.27.2",
   "org.postgresql" % "postgresql" % "42.2.5",
-  "org.apache.poi" % "poi" % "4.0.0",
-  "org.apache.poi" % "poi-ooxml" % "4.0.0",
-  "org.apache.commons" % "commons-math3" % "3.6.1"
+  "org.apache.poi" % "poi" % "4.0.1",
+  "org.apache.poi" % "poi-ooxml" % "4.0.1",
+  "org.apache.commons" % "commons-math3" % "3.6.1",
 )
 
 mainClass in (Compile, run) := Some("Starter")

@@ -17,24 +17,24 @@ import tasks.{GenerateDatabaseCode, GenerateWebsite, ImportData, GenerateScopeIt
 
 object Starter {
 
-  private val tasks:Map[String,TaskTrait] =
-    Map( "gen"->GenerateDatabaseCode,
-         "site"->GenerateWebsite,
-         "import"->ImportData,
-         "scope"->GenerateScopeItemPages
+  private val tasks: Map[String, TaskTrait] =
+    Map("gen" -> GenerateDatabaseCode,
+      "site" -> GenerateWebsite,
+      "import" -> ImportData,
+      "scope" -> GenerateScopeItemPages
     )
 
   def main(args: Array[String]): Unit = {
     try {
-      if(args.isEmpty){
+      if (args.isEmpty) {
         tasks("import").run()
       } else {
-      args foreach { s =>
-        val t: TaskTrait = tasks(s)
-        print(s"\n###Start: ${t.info} \n")
-        t.run()
-        print(s"###Stop: ${t.info} \n")
-      }
+        args foreach { s =>
+          val t: TaskTrait = tasks(s)
+          print(s"\n###Start: ${t.info} \n")
+          t.run()
+          print(s"###Stop: ${t.info} \n")
+        }
       }
     } catch {
       case e: Throwable =>

@@ -32,6 +32,7 @@ final case class ExcelImport(src:String, sheet:String, dest:String, header:Int)
 
 trait Configuration{
   def db:Database
+  def extractText:List[String]
   def scandirs:List[String]
   def scanfiles:List[String]
   def outputdir:String
@@ -50,6 +51,8 @@ case object Config extends Configuration {
   private val config: com.typesafe.config.Config = ConfigFactory.load()
 
   val db:Database = Database.forConfig("ta2020.db")
+
+  val extractText:List[String] = config.getStringList("ta2020.extractText").asScala.toList
 
   val scandirs:List[String] = config.getStringList("ta2020.scandirs").asScala.toList
 
