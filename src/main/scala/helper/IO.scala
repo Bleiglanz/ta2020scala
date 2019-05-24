@@ -22,8 +22,7 @@ import model.entities.Document
 import slick.dbio.DBIOAction
 import java.nio.file.Files
 
-//import org.apache.tika.Tika
-
+//import org.apache.tika.Tika;
 import scala.annotation.tailrec
 import slick.jdbc.PostgresProfile.api._
 

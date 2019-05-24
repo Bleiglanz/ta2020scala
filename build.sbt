@@ -38,7 +38,7 @@ scalacOptions ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-//  "org.apache.tika" % "tika-parsers" % "1.21",
+  //"org.apache.tika" % "tika-parsers" % "1.20",
   "com.typesafe" % "config" % "1.3.2",
   "com.typesafe.slick" %% "slick" % "3.3.0",
   "org.slf4j" % "slf4j-nop" % "1.7.25",
