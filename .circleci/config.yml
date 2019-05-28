@@ -24,7 +24,7 @@ jobs:
           key: sbt-cache
       - run:
           name: Compile ta2020scala dist package
-          command: cat /dev/null | sbt clean update dist
+          command: cat /dev/null | sbt clean update dist assembly
       - store_artifacts: # for display in Artifacts: https://circleci.com/docs/2.0/artifacts/ 
           path: target/universal/ta2020scala.zip
           destination: ta2020scala
