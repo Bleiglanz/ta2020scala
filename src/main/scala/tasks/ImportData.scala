@@ -16,7 +16,7 @@
 package tasks
 import helper.IO
 import ta2020.{Config, ExcelImport}
-import model.entities.{Document, Excelsheet, Meldungen, Steckscheiben}
+import model.entities.{Document, Excelsheet, Meldungen, Steckscheiben, Tikadocument}
 import slick.jdbc.PostgresProfile
 import java.sql.Timestamp
 import java.time.Instant
@@ -42,6 +42,7 @@ case object ImportData extends TaskTrait {
     IO.executeDBIOSeq(Excelsheet.dropAction andThen Excelsheet.createAction)
     IO.executeDBIOSeq(Meldungen.dropAction andThen Meldungen.createAction)
     IO.executeDBIOSeq(Steckscheiben.dropAction andThen Steckscheiben.createAction)
+    IO.executeDBIOSeq(Tikadocument.dropAction andThen Tikadocument.createAction)
 
     val session = db.createSession
     try {

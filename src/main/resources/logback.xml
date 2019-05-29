@@ -10,6 +10,8 @@
     <logger name="slick.compiler"                     level="INFO"/>
     <logger name="slick.jdbc.JdbcBackend.statement"   level="INFO"/>
     <logger name="slick.jdbc.StatementInvoker.result" level="INFO"/>
+    <logger name="org.apache.tika.config"             level="ERROR"/>
+
 
     <root level="info">
         <appender-ref ref="STDOUT" />

@@ -19,10 +19,11 @@ import java.io.{File, FileInputStream, PrintWriter}
 import java.time.Instant
 
 import model.entities.Document
+import model.entities.Tikadocument
 import slick.dbio.DBIOAction
 import java.nio.file.Files
 
-//import org.apache.tika.Tika;
+import org.apache.tika.Tika;
 import scala.annotation.tailrec
 import slick.jdbc.PostgresProfile.api._
 
@@ -32,7 +33,7 @@ import scala.concurrent.duration._
 
 object IO {
 
-  //private val tika:Tika = new Tika
+  private val tika:Tika = new Tika
 
   private val config = ta2020.Config
 
@@ -60,18 +61,21 @@ object IO {
       val extension = name.split('.').last.toLowerCase()
       val regex = """([0-9]{4})[.-][0-9]{3}""".r()
       val tanr: String = regex.findFirstIn(name).getOrElse("").replace('-', '.')
-      val text:String = if (config.extractText.contains(extension)) {
-//        try {
-//          val fs:FileInputStream = new FileInputStream(f)
-//          println(s"parse Datei $name")
-//          tika.parseToString(fs)
-//        } catch {
-//          case _: Exception => "Fehler beim Extrahieren von Text"
-//        } finally {
-//        }
-        "tika"
-      }else{
-        ""
+      if (config.extractText.contains(extension)) {
+        try {
+          val fs: FileInputStream = new FileInputStream(f)
+          println(s"parse Datei $name")
+          val rawtext = tika.parseToString(fs)
+          val tokens = rawtext.split("\\s").filter(_.length > 2).toSet
+          val content: String = tokens.toSeq.mkString(" ");
+          val tikdoc = Tikadocument(None, name, "tika",
+            f.getAbsolutePath, extension, java.sql.Timestamp.from(Files.getLastModifiedTime(f.toPath).toInstant),
+            content, java.sql.Timestamp.from(Instant.now), java.sql.Timestamp.from(Instant.now))
+          IO.executeDBIOSeq(Tikadocument.insertAction(Seq(tikdoc)))
+        } catch {
+          case _: Exception => "Fehler beim Extrahieren von Text"
+        } finally {
+        }
       }
       Document(None,
         name,
@@ -80,7 +84,7 @@ object IO {
         extension
         , f.length, tanr,
         java.sql.Timestamp.from(Files.getLastModifiedTime(f.toPath).toInstant),
-        text,
+        "",
         java.sql.Timestamp.from(Instant.now),
         java.sql.Timestamp.from(Instant.now))
     }
@@ -103,9 +107,13 @@ object IO {
   }
 
   def executeDBIOSeq(actions: DBIOAction[Unit, NoStream, _])(implicit db: Database): Unit = {
-    val timeout = 25.seconds
-    val f: Future[Unit] = db.run(actions)
-    Await.result(f, timeout)
+    try {
+      val timeout = 25.seconds
+      val f: Future[Unit] = db.run(actions)
+      Await.result(f, timeout)
+    } catch {
+      case e:Throwable => print("Fehler bei Datenbank-Ausführung"+e)
+    }
   }
 
   def executeDBIOQuery[T](actions: DBIO[Seq[T]])(implicit db: Database): Seq[T] = {

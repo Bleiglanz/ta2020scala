@@ -28,6 +28,15 @@ object Schema {
     DBString("content")
   ))
 
+  private val tikadocument = DBTable("tikadocument", List(
+    DBString("name"),
+    DBString("doctype"),
+    DBString("fullpath"),
+    DBString("extension"),
+    DBTimestamp("file_last_modified"),
+    DBString("tikaparse")
+  ))
+
   private val excelsheet = DBTable("excelsheet", List(
     DBString("filename"),
     DBString("sheetname"),
@@ -60,5 +69,5 @@ object Schema {
     DBBoolean("syssteck")
   ))
 
-  val tables: List[DBTable] = List(document, excelsheet, meldungen, steckscheiben)
+  val tables: List[DBTable] = List(document, excelsheet, meldungen, steckscheiben, tikadocument)
 }

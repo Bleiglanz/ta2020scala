@@ -19,9 +19,9 @@ object Starter {
 
   private val tasks: Map[String, TaskTrait] =
     Map("gen" -> GenerateDatabaseCode,
-      "site" -> GenerateWebsite,
-      "import" -> ImportData,
-      "scope" -> GenerateScopeItemPages
+        "site" -> GenerateWebsite,
+        "import" -> ImportData,
+        "scope" -> GenerateScopeItemPages
     )
 
   def main(args: Array[String]): Unit = {
