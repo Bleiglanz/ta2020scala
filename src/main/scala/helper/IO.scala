@@ -23,7 +23,7 @@ import model.entities.Tikadocument
 import slick.dbio.DBIOAction
 import java.nio.file.Files
 
-import org.apache.tika.Tika;
+import org.apache.tika.Tika
 import scala.annotation.tailrec
 import slick.jdbc.PostgresProfile.api._
 
@@ -54,39 +54,38 @@ object IO {
     case Some(f) => f.exists && f.isFile
   }
 
-  def uploadDocumentsFromDir(dirs: List[String], filenames: List[String], pred: File => Boolean = fileAllowed)(implicit db:Database):Unit = {
+  def uploadDocumentsFromDir(dirs: List[String],
+                             filenames: List[String],
+                             extractFrom:List[String],
+                             pred: File => Boolean = fileAllowed)(implicit db:Database):Unit = {
 
-    def makedoc(f: File): Document = {
+    def makedoc(f: File,parse:Boolean): Document = {
       val name = f.getName
       val extension = name.split('.').last.toLowerCase()
       val regex = """([0-9]{4})[.-][0-9]{3}""".r()
       val tanr: String = regex.findFirstIn(name).getOrElse("").replace('-', '.')
-      if (config.extractText.contains(extension)) {
+      if (config.extractText.contains(extension) && parse) {
         try {
           val fs: FileInputStream = new FileInputStream(f)
           println(s"parse Datei $name")
           val rawtext = tika.parseToString(fs)
           val tokens = rawtext.split("\\s").filter(_.length > 2).toSet
-          val content: String = tokens.toSeq.mkString(" ");
-          val tikdoc = Tikadocument(None, name, "tika",
-            f.getAbsolutePath, extension, java.sql.Timestamp.from(Files.getLastModifiedTime(f.toPath).toInstant),
-            content, java.sql.Timestamp.from(Instant.now), java.sql.Timestamp.from(Instant.now))
-          IO.executeDBIOSeq(Tikadocument.insertAction(Seq(tikdoc)))
+          val content: String = tokens.toSeq.mkString(" ").trim()
+          if (content.length > 0) {
+            val tikdoc = Tikadocument(None, name, "tika",
+              f.getAbsolutePath, extension, java.sql.Timestamp.from(Files.getLastModifiedTime(f.toPath).toInstant),
+              content, java.sql.Timestamp.from(Instant.now), java.sql.Timestamp.from(Instant.now))
+            IO.executeDBIOSeq(Tikadocument.insertAction(Seq(tikdoc)))
+          }
         } catch {
           case _: Exception => "Fehler beim Extrahieren von Text"
         } finally {
         }
       }
       Document(None,
-        name,
-        "",
-        f.getAbsolutePath,
-        extension
-        , f.length, tanr,
-        java.sql.Timestamp.from(Files.getLastModifiedTime(f.toPath).toInstant),
-        "",
-        java.sql.Timestamp.from(Instant.now),
-        java.sql.Timestamp.from(Instant.now))
+        name,"",        f.getAbsolutePath,        extension
+        , f.length, tanr,        java.sql.Timestamp.from(Files.getLastModifiedTime(f.toPath).toInstant),
+        "", java.sql.Timestamp.from(Instant.now), java.sql.Timestamp.from(Instant.now))
     }
 
     @tailrec def scanDirs(dirs: List[File], filelist: List[File]): List[File] = dirs match {
@@ -100,7 +99,7 @@ object IO {
     val df = dirs.map(new File(_)).filter(_.isDirectory)
     val filelist = scanDirs(df, filenames.map(new File(_)).filter(pred))
     for(f <- filelist) {
-      val doc= makedoc(f)
+      val doc= makedoc(f,extractFrom.exists(f.getParent.matches(_)))
       IO.executeDBIOSeq(Document.insertAction(Seq(doc)))
     }
 

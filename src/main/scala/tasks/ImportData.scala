@@ -60,7 +60,7 @@ case object ImportData extends TaskTrait {
       }
 
       print("start crawling directories....\n")
-      IO.uploadDocumentsFromDir(config.scandirs,config.scanfiles)
+      IO.uploadDocumentsFromDir(config.scandirs,config.scanfiles,config.extractFrom)
       print(s"crawling: done\n")
 
       val postsource = scala.io.Source.fromFile(config.postcreatesql)
