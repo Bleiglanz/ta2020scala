@@ -15,9 +15,6 @@
 // limitations under the License.
 package ta2020
 
-import java.text.DateFormat
-import java.util.{Calendar, Locale}
-
 import com.typesafe.config.{Config=>TypesafeConfig, ConfigFactory}
 
 import collection.JavaConverters._
@@ -32,8 +29,6 @@ final case class ExcelImport(src:String, sheet:String, dest:String, header:Int)
 
 trait Configuration{
   def db:Database
-  def extractText:List[String]
-  def extractFrom:List[String]
   def scandirs:List[String]
   def scanfiles:List[String]
   def outputdir:String
@@ -45,17 +40,9 @@ trait Configuration{
 
 case object Config extends Configuration {
 
-  private val dateformat:DateFormat = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.FULL, Locale.GERMANY)
-
-  private val currentdate:String =dateformat.format(Calendar.getInstance().getTime)
-
   private val config: com.typesafe.config.Config = ConfigFactory.load()
 
   val db:Database = Database.forConfig("ta2020.db")
-
-  val extractText:List[String] = config.getStringList("ta2020.extractText").asScala.toList
-
-  val extractFrom:List[String] = config.getStringList("ta2020.extractFrom").asScala.toList
 
   val scandirs:List[String] = config.getStringList("ta2020.scandirs").asScala.toList
 

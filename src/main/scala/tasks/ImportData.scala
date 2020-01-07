@@ -16,33 +16,30 @@
 package tasks
 import helper.IO
 import ta2020.{Config, ExcelImport}
-import model.entities.{Document, Excelsheet, Meldungen, Steckscheiben, Tikadocument}
+import model.entities.{Document, Excelsheet}
 import slick.jdbc.PostgresProfile
 import java.sql.Timestamp
 import java.time.Instant
 import java.io.File
 import java.nio.file.Files
 
-case object ImportData extends TaskTrait {
+case object ImportData {
 
-  val info = "importing data to local database from excel sheets"
-
-  override def run(): Unit = {
+  def run(): Unit = {
 
     val config = Config
     val now:Timestamp = Timestamp.from(Instant.now)
 
     implicit val db: PostgresProfile.api.Database = config.db
 
+
     val presource = scala.io.Source.fromFile(config.precreatesql)
     IO.executeDBPlain(presource.mkString)
     presource.close()
 
+
     IO.executeDBIOSeq(Document.dropAction andThen Document.createAction)
     IO.executeDBIOSeq(Excelsheet.dropAction andThen Excelsheet.createAction)
-    IO.executeDBIOSeq(Meldungen.dropAction andThen Meldungen.createAction)
-    IO.executeDBIOSeq(Steckscheiben.dropAction andThen Steckscheiben.createAction)
-    IO.executeDBIOSeq(Tikadocument.dropAction andThen Tikadocument.createAction)
 
     val session = db.createSession
     try {
@@ -60,7 +57,7 @@ case object ImportData extends TaskTrait {
       }
 
       print("start crawling directories....\n")
-      IO.uploadDocumentsFromDir(config.scandirs,config.scanfiles,config.extractFrom)
+      IO.uploadDocumentsFromDir(config.scandirs,config.scanfiles)
       print(s"crawling: done\n")
 
       val postsource = scala.io.Source.fromFile(config.postcreatesql)

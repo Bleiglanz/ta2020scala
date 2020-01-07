@@ -38,7 +38,6 @@ scalacOptions ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "org.apache.tika" % "tika-parsers" % "1.21",
   "com.typesafe" % "config" % "1.3.2",
   "com.typesafe.slick" %% "slick" % "3.3.0",
   "org.slf4j" % "slf4j-nop" % "1.7.25",
@@ -49,12 +48,6 @@ libraryDependencies ++= Seq(
   "org.apache.poi" % "poi-ooxml" % "4.0.1",
   "org.apache.commons" % "commons-math3" % "3.6.1",
 )
-
-assemblyMergeStrategy in assembly := {
-  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
-  case x => MergeStrategy.first
-}
-
 
 mainClass in (Compile, run) := Some("Starter")
 
@@ -68,10 +61,10 @@ scalaBinaryVersion in ThisBuild := "2.12"
 
 //wartremoverWarnings ++= Warts.all
 
-enablePlugins(SbtTwirl)
+//enablePlugins(SbtTwirl)
 
 enablePlugins(JavaAppPackaging)
 
 enablePlugins(DockerPlugin)
 
-TwirlKeys.templateImports += "ta2020._"
+//TwirlKeys.templateImports += "ta2020._"
