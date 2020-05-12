@@ -51,7 +51,16 @@ public class TableFromExcel {
     public static scala.Tuple2<Integer,Integer> procMergeExcel(String prefix, String dirname, Connection conn){
         Path p = java.nio.file.Paths.get(dirname);
         File mergedir = p.toFile();
-        if (null!=mergedir && mergedir.exists() && mergedir.isDirectory()) {
+        System.out.println("Aufruf"+mergedir.getAbsolutePath());
+        if (mergedir.exists() && mergedir.isDirectory()) {
+            // Rekursion in Unterverzeichnisse
+            for (File d : Objects.requireNonNull(mergedir.listFiles())){
+                    if(d!=null){
+                        if(d.isDirectory()){
+                            procMergeExcel(prefix,d.getAbsolutePath(),conn);
+                        }
+                    }
+            }
             for (File f : Objects.requireNonNull(mergedir.listFiles((f, x) ->
                     x != null && (x.toLowerCase().endsWith(".xlsx") ||
                                   x.toLowerCase().endsWith(".xlsm") ||
@@ -66,13 +75,11 @@ public class TableFromExcel {
                         Sheet s = wb.getSheetAt(i);
                             TableFromExcel tabelle = new TableFromExcel(p, s, eval, prefix, "", -1);
                             if (null != tabelle.getData() && tabelle.getData().length > 0) {
-                                //System.out.println("...merge blatt "+tabelle.name+" from "+filename);
                                 try {
                                     insertmergerows(tabelle,directory,f,conn);
                                 } catch (Exception e) {
                                     System.out.println(String.format("MERGE...PROBLEM MIT %s %s %s",directory,f.getName(),s.getSheetName()));
-                                    e.printStackTrace();
-                                    return new scala.Tuple2<>(0,0);
+                                    throw new RuntimeException(e); // fail early
                                 }
                             }
                     } // ende sheet
