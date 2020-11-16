@@ -20,6 +20,7 @@ object Starter {
       tasks.ImportData.run()
     } catch {
       case e: Throwable =>
+        println(e)
         ta2020.Config.db.close()
         throw new Exception(e)
     } finally {

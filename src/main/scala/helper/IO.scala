@@ -20,7 +20,7 @@ import java.time.Instant
 
 import model.entities.Document
 import slick.dbio.DBIOAction
-import java.nio.file.Files
+import java.nio.file.{Files, Path}
 
 import scala.annotation.tailrec
 import slick.jdbc.PostgresProfile.api._
@@ -66,10 +66,18 @@ object IO {
     }
 
     @tailrec def scanDirs(dirs: List[File], filelist: List[File]): List[File] = dirs match {
+
       case Nil => filelist
       case head :: rest => Option(head.listFiles) match {
         case None => scanDirs(rest, filelist)
-        case Some(l) => scanDirs(l.filter(_.isDirectory).toList ::: rest, l.filter(f => pred(f)).toList ::: filelist)
+        case Some(l) =>
+          print(s"scandir ${head.getAbsolutePath} \n")
+          val found_dirs = l.filter(_.isDirectory).toList ::: rest
+          val found_files = l.filter(f => pred(f)).toList ::: filelist
+          val found_links = l.filter(f => Files.isSymbolicLink(f.toPath)).
+              map(f=>Files.readSymbolicLink(f.toPath)).filter(p=>p.toFile.isDirectory).map(p=>p.toFile)
+          found_links.foreach(x=>print(s"==LINK==>${x}\n"))
+          scanDirs(found_dirs++found_links, found_files)
       }
     }
 

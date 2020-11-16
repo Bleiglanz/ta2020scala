@@ -40,7 +40,7 @@ trait Configuration{
 
 case object Config extends Configuration {
 
-  private val config: com.typesafe.config.Config = ConfigFactory.load()
+  private val config: com.typesafe.config.Config = ConfigFactory.load(this.getClass.getClassLoader)
 
   val db:Database = Database.forConfig("ta2020.db")
 
