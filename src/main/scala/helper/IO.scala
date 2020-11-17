@@ -71,7 +71,7 @@ object IO {
       case head :: rest => Option(head.listFiles) match {
         case None => scanDirs(rest, filelist)
         case Some(l) =>
-          print(s"scandir ${head.getAbsolutePath} \n")
+          //print(s"scandir ${head.getAbsolutePath} \n")
           val found_dirs = l.filter(_.isDirectory).toList ::: rest
           val found_files = l.filter(f => pred(f)).toList ::: filelist
           val found_links = l.filter(f => Files.isSymbolicLink(f.toPath)).

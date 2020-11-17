@@ -38,7 +38,7 @@ scalacOptions ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.github.pureconfig" %% "pureconfig" % "0.14.0",
+
   "com.typesafe.slick" %% "slick" % "3.3.0",
   "org.slf4j" % "slf4j-nop" % "1.7.25",
   "com.typesafe.slick" %% "slick-hikaricp" % "3.3.0",
